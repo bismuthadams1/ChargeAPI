@@ -9,12 +9,11 @@ from source.charge_models import base_class, eem_model
 app = Flask(__name__)
 
 @app.route('/<charge_model>/<smiles>', methods = ['GET','POST'])
-def handle_charge_request(charge_model, smiles):
+def handle_charge_request(charge_model: str, smiles: str) -> json | None:
     """
     handle 
     """
-    json_data = request.json
-    conformer =  json.loads(json_data)['conformer']
+    conformer = request.json['conformer']
     match charge_model:
         case 'EEM':
             charge_list = EEM_charge_model(smiles, conformer)
@@ -26,7 +25,7 @@ def handle_charge_request(charge_model, smiles):
             raise NameError
 
 
-def EEM_charge_model(smiles, conformer):
+def EEM_charge_model(smiles: str, conformer: str) -> list[float]:
     """
     Existing EEM model in openbabel. Run charge model in own environment.
     """

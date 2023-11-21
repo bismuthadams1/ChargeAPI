@@ -4,6 +4,7 @@ import json
 import os
 from rdkit import Chem
 import logging 
+from openff.topology import Molecule
 
 from abc import abstractmethod
 
@@ -37,35 +38,100 @@ class ExternalChargeModel:
         """
 
     @abstractmethod
-    def __call__(self, molecules: list[Chem.Mol], file_type: str = "json"):
+    def __call__(self, mapped_smiles: str, conformer: np.ndarray, file_method = False):
         """Get charges for molecule.
 
         Parameters
         ----------
-        molecules: List of Chem.Mol
+        mapped_smiles: mapped smiles 
             Molecule to run charge calculation on
+        conformer: np.ndarray (n_atoms, 3)
+            co
         file_type: str
             Type of file to output charges to [default = json]
-
+        file_method: bool
+            Some charge models require temporary files to be written and read, others use python objects stored in internal memory
         Returns
         -------
         charge_files: List of str
             Files containing charges for each molecule
             
         """
-        files_to_run = self.create_tmp_files(molecules)
-        output_files = self.run_external_code(files_to_run)
-        charges = self.read_charge_output(output_files)
-        if file_type == "json":
-            charge_files = self.to_json(charges, molecules)
+
+        openff_molecule = self.convert_to_openff_mol(molecule)
+        #if the charge model requires generation and reading of files to produce charges
+        if file_method:
+            file_path = self.generate_temp_files(openff_molecule)
+            charge_file_path = self.run_external_code(file_path)
+            charges = self.read_charge_output(charge_file_path)
+        #other charge model types will produce charges based on python objects in internal memory
         else:
-            raise NotImplementedError
+            charge_format = self.convert_to_charge_format(openff_molecule)
+            charges = self.assign_charges(charge_format)
 
-        return charge_files
+        return charges
 
+    def convert_to_openff_mol(self, mapped_smiles: str, conformer: np.ndarray):
+        """Convert the molecule to openff.Molecule format 
+        
+        Parameters
+        ----------
+        mapped_smiles: string
+            Mapped smiles with indicies linked to the conformer
+        conformer: np.ndarray (n_atoms,3)
+            Conformer 
+        
+        Returns
+        -------
+        openff_molecule: openff_molecule format
+            Files containing molecules, to be used in external code
+        """
+        openff_molecule = Molecule.from_mapped_smiles(mapped_smiles)
+        openff_molecule.add_conformer(conformer)
 
-    def run_external_code(self, molecule_files: list[str]):
-        """Run external charge model to generate charges
+        return mol_file
+
+    def convert_to_charge_format(self, openff_molecule: 'Molecule'):
+        """Convert openff molecule to appropriate format on which to assign charges
+
+        Parameters
+        ----------
+        openff_molecule: openff.topology.Molecule
+            Molecule to conver to appropriate format
+        
+        Returns
+        -------
+        Charge_format
+            Appropriate charge format to assign the partial charges 
+        
+        """
+
+    def assign_charges(self, charge_format: any):
+        """Assign charges according to charge model selected
+
+        Parameters
+        ----------
+        charge_format: generic python object depending on the charge model
+            Charge model appropriate python object on which to assign the charges
+        
+        """
+
+    def generate_temp_files(self, openff_molecule: 'Molecule'):
+        """Generate the temporary files required to run charge model
+
+        Parameters
+        ----------
+        openff_molecule: openff.topology.Molecule
+            Molecule to convert to temporary file
+        
+        Returns
+        -------
+        file
+            Temporary file to build charges off
+        """
+
+    def run_external_code(self, molecule_files: str):
+        """Run external charge model to generate charges on molecule files
         
         Parameters
         ----------
@@ -77,7 +143,8 @@ class ExternalChargeModel:
         returns file containing charges
         """
 
-    def read_charge_output(charge_files: list[str]):
+
+    def read_charge_output(charge_files: str):
         """Read charges from files produced by external code
         
         Parameters
@@ -90,7 +157,7 @@ class ExternalChargeModel:
         returns charges as a list of lists (charges for each atom for each molecule)
         """
 
-    def to_json(self, charges: list[list[float]], molecules: list[Chem.Mol]):
+    def to_json(self, charges: list[float], molecule: list[Chem.Mol]):
         """Write charges to json file
 
         Parameters
@@ -106,7 +173,7 @@ class ExternalChargeModel:
           files containing each set of charges
         """
         
-        json_file = get_valid_id_name() + "_charges.json"
+        json_file = + "_charges.json" #get_valid_id_name() 
 
         charge_dict = {}
         for charge_set, molecule in zip(charges, molecules):

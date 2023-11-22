@@ -7,15 +7,41 @@ from source.charge_models import base_class, eem_model
 
 app = Flask(__name__)
 
-@app.route('/<charge_model>/<smiles>', methods = ['GET','POST'])
-def handle_charge_request(charge_model: str, smiles: str) -> dict[str,Any] | None:
+@app.route('/<smiles>/<charge_model>', methods = ['GET','POST'])
+def handle_charge_request(charge_model: str, smiles: str) -> dict[str,any]:
     """
-    handle 
+    handle the charge request and run the correct charge model
     """
-    # conformer = request.json['conformer']
-    # if not request.json['units']:
-    #     units = 'angstrom'
+    json_data = request.json
+    conformer = json_data.get('conformer')
+
+    """
+    TODO
+    Proposed new structure to add tomorrow
+     with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+        conformer_file = temp_file.name
+
+        # Write conformer data to the temporary file
+        json.dump(conformer, temp_file)
+
+        # Call the specific charge model function with the temporary file path
+        if charge_model == 'EEM':
+            cmd = (
+                f"conda run -n eem-env python -m EEM_charge_model {smiles} {conformer_file}"
+            )
+            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            return jsonify({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+        elif charge_model == 'MBIS':
+            cmd = (
+                f"conda run -n nagl-mbis python -m MBIS_charge_model {smiles} {conformer_file}"
+            )
+            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            return jsonify({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+        else:
+            raise NameError("Invalid charge model")
     
+    """
+
 
     match charge_model:
         case 'EEM':
@@ -32,6 +58,8 @@ def EEM_charge_model(tagged_smiles: str, conformer: str, units: str) -> list[flo
     """
     Existing EEM model in openbabel. Run charge model in own environment.
     """
+    #will launch a new process but won't be able to pass info from API. conda ENVNAME executable, add code in 
+    #will need to pass info between with tmp files or can print out data. stdout. Linux pipes. subprocess.run -> return statement, loads everything the print statement has written. 
     subprocess.run(['conda','activate','openbabel'])
     charge_list = eem_model(tagged_smiles, conformer, units = units)
     return charge_list
@@ -49,7 +77,9 @@ def main():
     }
 
     json_data = json.dumps(data)
-    app.handle_charge_request('[H:1][O:2][H:3]/EEM', json = json_data)
+    #in another application this would bejson_charges = app.handle_charge_request('http://127.0.0.1:5000/[H:1][O:2][H:3]/EEM', json = json_data)
+
+    json_charges = app.handle_charge_request('[H:1][O:2][H:3]/EEM', json = json_data)
 
 if __name__ == '__main__':
     main()

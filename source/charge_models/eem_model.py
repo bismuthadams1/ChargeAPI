@@ -3,7 +3,7 @@
 """
 
 from base_class import ExternalChargeModel
-
+import openbabel
 
 class EEM_model(ExternalChargeModel):
 
@@ -27,7 +27,7 @@ class EEM_model(ExternalChargeModel):
         return self.available
 
     _name = "eem2015dn"
-    def __call__(self,  tagged_smiles: str, conformer: np.ndarray, file_method = False):
+    def __call__(self,  mapped_smiles: str, conformer: np.ndarray, file_method = False):
       """Get charges for molecule.
 
         Parameters
@@ -49,6 +49,18 @@ class EEM_model(ExternalChargeModel):
         return super().__call__(tagged_smiles, conformer)
 
     
+
+"""TODO
+if __name__ == "__main__":
+    # Define argparse setup for command line execution
+    parser = argparse.ArgumentParser(description='EEM charge model arguments')
+    parser.add_argument('mapped_smiles', type=str, help='Mapped SMILES representation')
+    parser.add_argument('conformer', type=str, help='Conformer file path')
+
+    args = parser.parse_args()
+    eem_model = EEM_charge_model()
+    eem_model(args.mapped_smiles, args.conformer) 
+"""
 
 
 

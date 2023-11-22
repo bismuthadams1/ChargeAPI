@@ -12,7 +12,11 @@ LOGGER = logging.getLogger(__name__)
 
 EXT_CHARGE_MODELS = {}
 
-
+   """
+    TODO
+    Proposed new structure to add tomorrow
+   Add argparse option in call. 
+    """
 
 class ExternalChargeModel:
     """Base class for external charge models

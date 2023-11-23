@@ -1,5 +1,6 @@
 import subprocess
 import requests
+import tempfile
 from flask import Flask, request, jsonify
 from multiprocessing import Process
 import json
@@ -42,37 +43,49 @@ def handle_charge_request(charge_model: str, smiles: str) -> dict[str,any]:
     
     """
 
+    with tempfile.NamedTemporaryFile(mode='w', delete=True) as temp_file:
+        #find full file path of tempfile
+        conformer_file = os.path.dirname(temp_file.name)
+    
+        # Write conformer data to the temporary file
+        json.dump(conformer, temp_file)
 
-    match charge_model:
-        case 'EEM':
-            charge_list = EEM_charge_model(smiles, conformer)
-            return jsonify({'charge_list': charge_list})
-        case 'MBIS':
-            charge_list = MBIS_charge_model(smiles, conformer)
-            return jsonify({'charge_list': charge_list})
-        case _:
-            raise NameError
+        match charge_model:
+            case 'EEM':
+                cmd = (
+                    f"conda run -n eem-env python -m ../charge_models/eem_model.py {smiles} {conformer_file}"
+                )
+                charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                return jsonify({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+            case 'MBIS':
+                cmd = (
+                            f"conda run -n nagl-mbis python -m ../charge_models/mbis_model.py {smiles} {conformer_file}"
+                        )
+                charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                return jsonify({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+            case _:
+                raise NameError
 
 
-def EEM_charge_model(tagged_smiles: str, conformer: str, units: str) -> list[float]:
-    """
-    Existing EEM model in openbabel. Run charge model in own environment.
-    """
-    #will launch a new process but won't be able to pass info from API. conda ENVNAME executable, add code in 
-    #will need to pass info between with tmp files or can print out data. stdout. Linux pipes. subprocess.run -> return statement, loads everything the print statement has written. 
-    subprocess.run(['conda','activate','openbabel'])
-    charge_list = eem_model(tagged_smiles, conformer, units = units)
-    return charge_list
+# def EEM_charge_model(tagged_smiles: str, conformer: str, units: str) -> list[float]:
+#     """
+#     Existing EEM model in openbabel. Run charge model in own environment.
+#     """
+#     #will launch a new process but won't be able to pass info from API. conda ENVNAME executable, add code in 
+#     #will need to pass info between with tmp files or can print out data. stdout. Linux pipes. subprocess.run -> return statement, loads everything the print statement has written. 
+#     subprocess.run(['conda','activate','openbabel'])
+#     charge_list = eem_model(tagged_smiles, conformer, units = units)
+#     return charge_list
 
-def MBIS_charge_model():
-    ...
+# def MBIS_charge_model():
+#     ...
 
-def ESPALOMA_charge_model():
-    ...
+# def ESPALOMA_charge_model():
+#     ...
 
 def main():
     data = {
-        "conformer": "array([[-0.78900161, -0.19816432, -0.        ],[-0.00612716,  0.39173634, -0.        ],[ 0.79512877, -0.19357202,  0.        ]])",
+        "conformer": "[-0.78900161, -0.19816432, -0.,-0.00612716,  0.39173634, -0., 0.79512877, -0.19357202,  0.]",
         "units":"angstrom"
     }
 

@@ -42,7 +42,7 @@ class ExternalChargeModel:
         """
 
     @abstractmethod
-    def __call__(self, mapped_smiles: str, conformer: np.ndarray, file_method = False):
+    def __call__(self, tagged_smiles: str, conformer: np.ndarray, file_method = False):
         """Get charges for molecule.
 
         Parameters
@@ -62,7 +62,7 @@ class ExternalChargeModel:
             
         """
 
-        openff_molecule = self.convert_to_openff_mol(molecule)
+        openff_molecule = self.convert_to_openff_mol(tagged_smiles, conformer)
         #if the charge model requires generation and reading of files to produce charges
         if file_method:
             file_path = self.generate_temp_files(openff_molecule)
@@ -75,7 +75,19 @@ class ExternalChargeModel:
 
         return charges
 
-    def convert_to_openff_mol(self, mapped_smiles: str, conformer: np.ndarray):
+    def _file_to_conformer(self, conformer_file_path) -> np.ndarray:
+        """Open file and provide conformer as np.ndarray
+
+        Parameters
+        ----------
+        conformer_file_path: string
+        """
+        with open(conformer_file_path, "w+") as tempfile:
+            conformer = np.array(list(tempfile.readline())).reshape(-1,3)
+            return conformer
+
+
+    def convert_to_openff_mol(self, tagged_smiles: str, conformer: np.ndarray):
         """Convert the molecule to openff.Molecule format 
         
         Parameters
@@ -90,7 +102,7 @@ class ExternalChargeModel:
         openff_molecule: openff_molecule format
             Files containing molecules, to be used in external code
         """
-        openff_molecule = Molecule.from_mapped_smiles(mapped_smiles)
+        openff_molecule = Molecule.from_mapped_smiles(tagged_smiles)
         openff_molecule.add_conformer(conformer)
 
         return mol_file

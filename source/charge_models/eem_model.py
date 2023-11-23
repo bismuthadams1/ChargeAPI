@@ -4,6 +4,9 @@
 
 from base_class import ExternalChargeModel
 import openbabel
+import argparse
+import subprocess
+import numpy as np
 
 class EEM_model(ExternalChargeModel):
 
@@ -27,7 +30,7 @@ class EEM_model(ExternalChargeModel):
         return self.available
 
     _name = "eem2015dn"
-    def __call__(self,  mapped_smiles: str, conformer: np.ndarray, file_method = False):
+    def __call__(self,  tagged_smiles: str, conformer: np.ndarray, file_method = False):
       """Get charges for molecule.
 
         Parameters

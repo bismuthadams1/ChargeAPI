@@ -1,12 +1,16 @@
-"""
-   Existing EEM 2015 model available in OpenBabel https://open-babel.readthedocs.io/en/latest/Charges/charges.html
+"""Existing EEM 2015 model available in OpenBabel https://open-babel.readthedocs.io/en/latest/Charges/charges.html
 """
 
-from base_class import ExternalChargeModel
-import openbabel
+from source.charge_models.base_class import ExternalChargeModel
+from openbabel import openbabel as ob
+from openbabel import pybel
 import argparse
 import subprocess
 import numpy as np
+import logging
+
+#supress openff warnings
+logging.getLogger("openff").setLevel(logging.CRITICAL)
 
 class EEM_model(ExternalChargeModel):
 
@@ -14,6 +18,7 @@ class EEM_model(ExternalChargeModel):
         super().__init__()
         self.file_type = ftype
 
+    _name = "eem2015dn"
     def check_code_availability(self):
         """Check external code can be run
         """
@@ -29,9 +34,8 @@ class EEM_model(ExternalChargeModel):
 
         return self.available
 
-    _name = "eem2015dn"
-    def __call__(self,  tagged_smiles: str, conformer: np.ndarray, file_method = False):
-      """Get charges for molecule.
+    def __call__(self,  tagged_smiles: str, conformer: str, file_method: bool = False):
+        """Get charges for molecule.
 
         Parameters
         ----------
@@ -47,13 +51,53 @@ class EEM_model(ExternalChargeModel):
         -------
         charge_files: List of str
             Files containing charges for each molecule
-            
         """
         return super().__call__(tagged_smiles, conformer)
 
-    
+    def convert_to_charge_format(self, openff_molecule):
+        """Convert openff molecule to appropriate format on which to assign charges
 
-"""TODO
+        Parameters
+        ----------
+        openff_molecule: openff.topology.Molecule
+            Molecule to conver to appropriate format
+        
+        Returns
+        -------
+        ob_mol
+           Open babel molecule
+        
+        """
+        with tempfile.NamedTemporaryFile(mode='w', delete=True) as temp_file:
+            openff_molecule.to_file('tempfile.sdf',file_format='sdf')
+            ob_mol = next(readfile('sdf','tempfile.sdf'))
+        
+        return ob_mol
+    
+    def assign_charges(self, ob_mol: pybel.Molecule):
+        """Assign charges according to charge model selected
+
+        Parameters
+        ----------
+        ob_mol: generic python object depending on the charge model
+            Charge model appropriate python object on which to assign the charges
+
+        Returns
+        -------
+        partial_charges: list of partial charges 
+        """
+        charge_model = pybel.ob.OBChargeModel.FindType('eem')
+        charge_model.ComputeCharges(ob_mol)
+        charges = [atom.GetPartialCharge() for atom in ob.OBMolAtomIter(obmol)]
+
+        return charges
+
+
+
+
+
+
+
 if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='EEM charge model arguments')
@@ -61,9 +105,8 @@ if __name__ == "__main__":
     parser.add_argument('conformer', type=str, help='Conformer file path')
 
     args = parser.parse_args()
-    eem_model = EEM_charge_model()
+    eem_model = EEM_model()
     eem_model(args.mapped_smiles, args.conformer) 
-"""
 
 
 

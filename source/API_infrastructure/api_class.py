@@ -15,7 +15,7 @@ def handle_charge_request(charge_model: str, smiles: str) -> dict[str,any]:
     json_data = request.json
     conformer = json_data.get('conformer')
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=True) as temp_file:
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) 
         #find full file path of tempfile
         conformer_file = os.path.dirname(temp_file.name)
     

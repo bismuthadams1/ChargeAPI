@@ -5,37 +5,49 @@ import json
 import numpy as np
 import os
 
+from source.charge_models.eem_model import EEM_model
 
-def handle_charge_request(charge_model: str, smiles: str, conformer: str) -> dict[str,any]:
+def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model
     """
-    conformer = conformer.tolist()
+    #flatten to list for json
+    conformer = conformer.flatten().tolist()
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=True) as temp_file:
-        #find full file path of tempfile
-        conformer_file = os.path.dirname(temp_file.name)
+    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+
+    temp_file_name = temp_file.name
+       
+    # Write conformer data to the temporary file
+    json.dump(conformer, temp_file)
+    temp_file.flush()
     
-        # Write conformer data to the temporary file
-        json.dump(conformer, temp_file)
+    #find full file path of tempfile
+    #conformer_file_path = os.path.join(os.path.dirname(temp_file.name), temp_file.name)
+    conformer_file_path = temp_file.name
 
-        match charge_model:
-            case 'EEM':
-                script_path = os.path.abspath('../charge_models/eem_model.py')
-                cmd = (
-                    f"conda run -n openbabel python {script_path} {smiles} {conformer_file}"
-                )
-                charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
-            case 'MBIS':
-                cmd = (
-                            f"conda run -n nagl-mbis python -m ../charge_models/mbis_model.py {smiles} {conformer_file}"
-                        )
-                charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
-            case _:
-                raise NameError
+    match charge_model:
+        case 'EEM':
+          #  script_path = os.path.abspath('../ChargeAPI/source/charge_models/eem_model.py')
+           # cmd = (
+          #      f"conda run -n openbabel python {script_path} {smiles} {conformer_file_path}"
+          #  )
+          #  charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+          #  return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+            eem_model = EEM_model()
+            eem_model(smiles, conformer_file_path) 
 
+        case 'MBIS':
+            script_path = os.path.abspath('../ChargeAPI/source/charge_models/mbis_model.py')
+            cmd = (
+                        f"conda run -n nagl-mbis python -m {script_path} {smiles} {conformer_file_path}"
+                    )
+            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+        case _:
+            raise NameError
+
+    os.remove(conformer_file_path)
 
 def main():
 
@@ -44,6 +56,8 @@ def main():
        [ 0.79512877, -0.19357202,  0.        ]])
 
     json_charges = handle_charge_request(charge_model = 'EEM', smiles = '[H:1][O:2][H:3]', conformer = conformer)
+
+    print(json_charges)
 
 if __name__ == '__main__':
     main()

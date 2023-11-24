@@ -4,6 +4,7 @@ import tempfile
 from flask import Flask, request, jsonify
 from multiprocessing import Process
 import json
+import os
 
 app = Flask(__name__)
 
@@ -12,29 +13,38 @@ def handle_charge_request(charge_model: str, smiles: str) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model
     """
-    json_data = request.json
-    conformer = json_data.get('conformer')
+    conformer = conformer.flatten().tolist()
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) 
-        #find full file path of tempfile
-        conformer_file = os.path.dirname(temp_file.name)
+    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+       
+    # Write conformer data to the temporary file
+    json.dump(conformer, temp_file)
+    temp_file.flush()
     
-        # Write conformer data to the temporary file
-        json.dump(conformer, temp_file)
+    #find full file path of tempfile
+    conformer_file_path = temp_file.name
 
-        match charge_model:
+
+    match charge_model:
             case 'EEM':
+                script_path = os.path.abspath('../ChargeAPI/source/charge_models/eem_model.py')
                 cmd = (
-                    f"conda run -n eem-env python -m ../charge_models/eem_model.py {smiles} {conformer_file}"
+                    f"conda run -n openbabel python {script_path} {smiles} {conformer_file_path}"
                 )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                return jsonify({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+                os.remove(conformer_file_path)
+                return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+                # eem_model = EEM_model()
+                # charges = eem_model(smiles, conformer_file_path) 
+                # return charges
             case 'MBIS':
+                script_path = os.path.abspath('../ChargeAPI/source/charge_models/mbis_model.py')
                 cmd = (
-                            f"conda run -n nagl-mbis python -m ../charge_models/mbis_model.py {smiles} {conformer_file}"
+                            f"conda run -n nagl-mbis python -m {script_path} {smiles} {conformer_file_path}"
                         )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                return jsonify({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+                os.remove(conformer_file_path)
+                return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
             case _:
                 raise NameError
 

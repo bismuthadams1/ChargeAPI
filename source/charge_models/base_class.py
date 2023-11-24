@@ -9,7 +9,7 @@ import tempfile
 
 from rdkit import Chem
 from openff.toolkit.topology import Molecule
-from openff.units import unit
+from openff.units import unit, Quantity
 
 from abc import abstractmethod
 
@@ -91,11 +91,12 @@ class ExternalChargeModel:
             tempfile.seek(0)
             conformer_string = tempfile.read()
             conformer = np.array(json.loads(conformer_string)).reshape(-1,3) 
-            conformer = unit.Quantity(conformer, unit.angstrom)
+            conformer = Quantity(conformer, unit.angstrom)
+            print(conformer)
             return conformer 
 
 
-    def convert_to_openff_mol(self, tagged_smiles: str, conformer: unit.Quantity):
+    def convert_to_openff_mol(self, tagged_smiles: str, conformer: np.ndarray):
         """Convert the molecule to openff.Molecule format 
         
         Parameters
@@ -110,7 +111,9 @@ class ExternalChargeModel:
         openff_molecule: openff_molecule format
             Files containing molecules, to be used in external code
         """
+
         openff_molecule = Molecule.from_mapped_smiles(tagged_smiles)
+        print(f'conformer is {type(conformer)}')
         openff_molecule.add_conformer(conformer)
 
         return openff_molecule

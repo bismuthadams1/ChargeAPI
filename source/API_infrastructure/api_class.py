@@ -7,7 +7,7 @@ import json
 
 app = Flask(__name__)
 
-@app.route('/<smiles>/<charge_model>', methods = ['GET','POST'])
+@app.route('/charge/<smiles>/<charge_model>', methods = ['GET','POST'])
 def handle_charge_request(charge_model: str, smiles: str) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model
@@ -49,7 +49,7 @@ def main():
     json_data = json.dumps(data)
     #in another application this would bejson_charges = app.handle_charge_request('http://127.0.0.1:5000/[H:1][O:2][H:3]/EEM', json = json_data)
 
-    json_charges = requests.post('http://127.0.0.1:5000/[H:1][O:2][H:3]/EEM', json = json_data)
+    json_charges = requests.post('http://127.0.0.1:5000/charge/[H:1][O:2][H:3]/EEM', json = json_data)
 
 if __name__ == '__main__':
     main()

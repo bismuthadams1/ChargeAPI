@@ -6,8 +6,10 @@ import logging
 import numpy as np
 import tempfile
 
+
 from rdkit import Chem
 from openff.toolkit.topology import Molecule
+from openff.units import unit
 
 from abc import abstractmethod
 
@@ -88,11 +90,12 @@ class ExternalChargeModel:
         with open(conformer_file_path, "r") as tempfile:
             tempfile.seek(0)
             conformer_string = tempfile.read()
-            conformer = np.array(json.loads(conformer_string)).reshape(-1,3)
-            return conformer
+            conformer = np.array(json.loads(conformer_string)).reshape(-1,3) 
+            conformer = unit.Quantity(conformer, unit.angstrom)
+            return conformer 
 
 
-    def convert_to_openff_mol(self, tagged_smiles: str, conformer: np.ndarray):
+    def convert_to_openff_mol(self, tagged_smiles: str, conformer: unit.Quantity):
         """Convert the molecule to openff.Molecule format 
         
         Parameters
@@ -110,7 +113,7 @@ class ExternalChargeModel:
         openff_molecule = Molecule.from_mapped_smiles(tagged_smiles)
         openff_molecule.add_conformer(conformer)
 
-        return mol_file
+        return openff_molecule
 
     def convert_to_charge_format(self, openff_molecule: 'Molecule'):
         """Convert openff molecule to appropriate format on which to assign charges

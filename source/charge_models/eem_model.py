@@ -8,6 +8,9 @@ import argparse
 import subprocess
 import numpy as np
 import logging
+import tempfile
+from openff.units import unit
+
 
 #supress openff warnings
 logging.getLogger("openff").setLevel(logging.CRITICAL)
@@ -68,10 +71,12 @@ class EEM_model(ExternalChargeModel):
            Open babel molecule
         
         """
+
         with tempfile.NamedTemporaryFile(mode='w', delete=True) as temp_file:
             openff_molecule.to_file('tempfile.sdf',file_format='sdf')
-            ob_mol = next(readfile('sdf','tempfile.sdf'))
+            ob_mol = next(pybel.readfile('sdf','tempfile.sdf'))
         
+        ob_mol = ob_mol.OBMol
         return ob_mol
     
     def assign_charges(self, ob_mol: pybel.Molecule):
@@ -86,17 +91,11 @@ class EEM_model(ExternalChargeModel):
         -------
         partial_charges: list of partial charges 
         """
-        charge_model = pybel.ob.OBChargeModel.FindType('eem')
+        charge_model = ob.OBChargeModel.FindType("eem2015bn")
         charge_model.ComputeCharges(ob_mol)
-        charges = [atom.GetPartialCharge() for atom in ob.OBMolAtomIter(obmol)]
+        charges = [atom.GetPartialCharge() for atom in ob.OBMolAtomIter(ob_mol)]
 
         return charges
-
-
-
-
-
-
 
 if __name__ == "__main__":
     # Define argparse setup for command line execution

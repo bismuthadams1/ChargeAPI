@@ -5,8 +5,6 @@ import json
 import numpy as np
 import os
 
-from source.charge_models.eem_model import EEM_model
-
 def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model
@@ -15,28 +13,25 @@ def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray)
     conformer = conformer.flatten().tolist()
 
     temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False)
-
-    temp_file_name = temp_file.name
        
     # Write conformer data to the temporary file
     json.dump(conformer, temp_file)
     temp_file.flush()
     
     #find full file path of tempfile
-    #conformer_file_path = os.path.join(os.path.dirname(temp_file.name), temp_file.name)
     conformer_file_path = temp_file.name
 
     match charge_model:
         case 'EEM':
-          #  script_path = os.path.abspath('../ChargeAPI/source/charge_models/eem_model.py')
-           # cmd = (
-          #      f"conda run -n openbabel python {script_path} {smiles} {conformer_file_path}"
-          #  )
-          #  charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-          #  return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
-            eem_model = EEM_model()
-            eem_model(smiles, conformer_file_path) 
-
+            script_path = os.path.abspath('../ChargeAPI/source/charge_models/eem_model.py')
+            cmd = (
+                f"conda run -n openbabel python {script_path} {smiles} {conformer_file_path}"
+            )
+            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+            # eem_model = EEM_model()
+            # charges = eem_model(smiles, conformer_file_path) 
+            return charges
         case 'MBIS':
             script_path = os.path.abspath('../ChargeAPI/source/charge_models/mbis_model.py')
             cmd = (

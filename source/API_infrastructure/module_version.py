@@ -25,16 +25,16 @@ def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray)
 
     match charge_model:
         case 'EEM':
-            # script_path = os.path.abspath('../ChargeAPI/source/charge_models/eem_model.py')
-            # cmd = (
-            #     f"conda run -n openbabel python {script_path} {smiles} {conformer_file_path}"
-            # )
-            # charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            # os.remove(conformer_file_path)
-            # return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
-            eem_model = EEM_model()
-            charges = eem_model(smiles, conformer_file_path) 
-            return charges
+            script_path = os.path.abspath('../ChargeAPI/source/charge_models/eem_model.py')
+            cmd = (
+                f"conda run -n openbabel python {script_path} {smiles} {conformer_file_path}"
+            )
+            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            os.remove(conformer_file_path)
+            return json.dumps({'charge_result': charge_result.stdout.decode(), 'error': charge_result.stderr.decode()})
+            # eem_model = EEM_model()
+            # charges = eem_model(smiles, conformer_file_path) 
+            # return charges
         case 'MBIS':
             script_path = os.path.abspath('../ChargeAPI/source/charge_models/mbis_model.py')
             cmd = (

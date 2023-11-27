@@ -9,7 +9,7 @@ import tempfile
 
 from rdkit import Chem
 from openff.toolkit.topology import Molecule
-from openff.units import unit, Quantity
+from openff.units import unit
 
 from abc import abstractmethod
 
@@ -91,8 +91,7 @@ class ExternalChargeModel:
             tempfile.seek(0)
             conformer_string = tempfile.read()
             conformer = np.array(json.loads(conformer_string)).reshape(-1,3) 
-            conformer = Quantity(conformer, unit.angstrom)
-            print(conformer)
+            conformer = conformer * unit.angstrom
             return conformer 
 
 

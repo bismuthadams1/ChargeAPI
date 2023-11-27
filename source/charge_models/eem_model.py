@@ -10,6 +10,8 @@ import numpy as np
 import logging
 import tempfile
 from openff.units import unit
+from openff.units.openmm import from_openmm, to_openmm
+from openff.toolkit.topology import Molecule
 
 
 #supress openff warnings
@@ -56,6 +58,29 @@ class EEM_model(ExternalChargeModel):
             Files containing charges for each molecule
         """
         return super().__call__(tagged_smiles, conformer)
+    
+
+    def convert_to_openff_mol(self, tagged_smiles: str, conformer: np.ndarray):
+        """Convert the molecule to openff.Molecule format 
+        
+        Parameters
+        ----------
+        mapped_smiles: string
+            Mapped smiles with indicies linked to the conformer
+        conformer: np.ndarray (n_atoms,3)
+            Conformer 
+        
+        Returns
+        -------
+        openff_molecule: openff_molecule format
+            Files containing molecules, to be used in external code
+        """
+
+        openff_molecule = Molecule.from_mapped_smiles(tagged_smiles)
+        #because openmm uses openff infrastructure with openmm units, need to modify the class here with to_openmm
+        openff_molecule.add_conformer(to_openmm(conformer))
+
+        return openff_molecule
 
     def convert_to_charge_format(self, openff_molecule):
         """Convert openff molecule to appropriate format on which to assign charges
@@ -105,7 +130,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     eem_model = EEM_model()
-    eem_model(args.mapped_smiles, args.conformer) 
+    charges = eem_model(args.mapped_smiles, args.conformer) 
+    print(charges)
 
 
 

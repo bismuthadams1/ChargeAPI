@@ -12,11 +12,15 @@ app = Flask(__name__)
 def handle_charge_request(charge_model: str) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model
+    Parameters
+    ---------
+    charge_model: str
+        Charge model to chose from the switch statement
     """
     json_data = request.get_json()
     json_data = json.loads(json_data)
+    #extract the data from the json
     conformer = json_data['conformer']
-    #conformer = conformer.flatten().tolist()
     tagged_smiles = json_data['tagged_smiles']
     temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False)
        
@@ -34,55 +38,53 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
                     f"conda run -n openbabel python {script_path} {tagged_smiles} {conformer_file_path}"
                 )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                #remove temporary file containing conformer
                 os.remove(conformer_file_path)
-                charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
-                # Create JSON response
-                json_response = {
-                    'charge_result': charge_result_list,
-                    'error': charge_result.stderr.decode()  # Include the error message if any
-                }
-                # Return the charge result as a list and the JSON response
-                return jsonify(json_response)
+                return prepare_json_outs(charge_result)
             case 'MBIS':
                 script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
                 cmd = (
                             f"conda run -n nagl-mbis python -m {script_path} {tagged_smiles} {conformer_file_path}"
                         )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                #remove temporary file containing conformer
                 os.remove(conformer_file_path)
-                charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
-                  # Create JSON response
-                json_response = {
-                    'charge_result': charge_result_list,
-                    'error': charge_result.stderr.decode()  # Include the error message if any
-                }
-                # Return the charge result as a list and the JSON response
-                return jsonify(json_response)            
+                return prepare_json_outs(charge_result)
             case _:
                 raise NameError
          
 
 @app.route('/shutdown', methods=['POST'])
-def shutdown():
+def shutdown() -> str:
+    """
+    Shut down the API
+    """
     func = request.environ.get('werkzeug.server.shutdown')
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
     return 'Server shutting down...'
 
+def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
+    """
+    grabs data from subprocess and produces a json of the output
+    Paramters
+    --------
+    charge_result:  subprocess.CompletedProcess
+        Result of the subprocess run command in/out/error info
+    """
+    charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
+    # Create JSON response
+    json_response = {
+        'charge_result': charge_result_list,
+        'error': charge_result.stderr.decode()  # Include the error message if any
+    }
+    # Return the charge result as a list and the JSON response        
+    return jsonify(json_response)
 
 def main():
+    #run the app
     app.run(debug=True)
-    # data = {
-    #     "conformer": "[-0.78900161, -0.19816432, -0.,-0.00612716,  0.39173634, -0., 0.79512877, -0.19357202,  0.]",
-    #     "tagged_smiles":"[H:1][O:2][H:3]",
-    #     "units":"angstrom"
-    # }
-
-    # json_data = json.dumps(data)
-    # #in another application this would bejson_charges = app.handle_charge_request('http://127.0.0.1:5000/[H:1][O:2][H:3]/EEM', json = json_data)
-
-    # json_charges = requests.post('http://127.0.0.1:5000/charge/EEM', json = json_data)
 
 if __name__ == '__main__':
     main()

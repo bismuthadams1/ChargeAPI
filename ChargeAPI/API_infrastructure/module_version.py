@@ -31,15 +31,7 @@ def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray)
             )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             os.remove(conformer_file_path)
-            charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
-             # Create JSON response
-            json_response = {
-                'charge_result': charge_result_list,
-                'error': charge_result.stderr.decode()  # Include the error message if any
-            }
-
-             # Return the charge result as a list and the JSON response
-            return json_response
+            return prepare_json_outs(charge_result)
         case 'MBIS':
             script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
             cmd = (
@@ -47,27 +39,23 @@ def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray)
                     )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             os.remove(conformer_file_path)
-            charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
-            json_response = {
-                'charge_result': charge_result_list,
-                'error': charge_result.stderr.decode()  # Include the error message if any
-            }
-            return json_response
+            return prepare_json_outs(charge_result)
         case _:
             raise NameError
 
-def main():
-
-    conformer = np.array([[-0.78900161, -0.19816432, -0.        ],
-                          [-0.00612716,  0.39173634, -0.        ],
-                          [ 0.79512877, -0.19357202,  0.        ]])
-
-    json_result = handle_charge_request(charge_model = 'EEM', smiles = '[H:1][O:2][H:3]', conformer = conformer)
-    # charges = json.loads(json_result['charge_result'])
-
-    print(json_result)
-    print(json_result['charge_result'])
-    # print(f'the charges are {charges}')
-
-if __name__ == '__main__':
-    main()
+def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
+    """
+    grabs data from subprocess and produces a json of the output
+    Paramters
+    --------
+    charge_result:  subprocess.CompletedProcess
+        Result of the subprocess run command in/out/error info
+    """
+    charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
+    # Create JSON response
+    json_response = {
+        'charge_result': charge_result_list,
+        'error': charge_result.stderr.decode()  # Include the error message if any
+    }
+    # Return the charge result as a list and the JSON response        
+    return jsonify(json_response)

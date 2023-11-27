@@ -29,7 +29,7 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
 
     match charge_model:
             case 'EEM':
-                script_path = os.path.abspath('../ChargeAPI/ChargeAPI/charge_models/eem_model.py')
+                script_path = os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
                 cmd = (
                     f"conda run -n openbabel python {script_path} {tagged_smiles} {conformer_file_path}"
                 )
@@ -44,7 +44,7 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
                 # Return the charge result as a list and the JSON response
                 return jsonify(json_response)
             case 'MBIS':
-                script_path = os.path.abspath('../ChargeAPI/ChargeAPI/charge_models/mbis_model.py')
+                script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
                 cmd = (
                             f"conda run -n nagl-mbis python -m {script_path} {tagged_smiles} {conformer_file_path}"
                         )

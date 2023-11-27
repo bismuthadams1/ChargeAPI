@@ -25,7 +25,7 @@ def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray)
 
     match charge_model:
         case 'EEM':
-            script_path = os.path.abspath('../ChargeAPI/ChargeAPI/charge_models/eem_model.py')
+            script_path = os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
             cmd = (
                 f"conda run -n openbabel python {script_path} {smiles} {conformer_file_path}"
             )
@@ -41,7 +41,7 @@ def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray)
              # Return the charge result as a list and the JSON response
             return json_response
         case 'MBIS':
-            script_path = os.path.abspath('../ChargeAPI/ChargeAPI/charge_models/mbis_model.py')
+            script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
             cmd = (
                         f"conda run -n nagl-mbis python -m {script_path} {smiles} {conformer_file_path}"
                     )

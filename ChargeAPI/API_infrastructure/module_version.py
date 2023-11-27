@@ -5,6 +5,7 @@ import json
 import numpy as np
 import os
 
+
 from ChargeAPI.charge_models.eem_model import EEM_model
 
 def handle_charge_request(charge_model: str, smiles: str, conformer: np.ndarray) -> dict[str,any]:
@@ -58,4 +59,4 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
         'error': charge_result.stderr.decode()  # Include the error message if any
     }
     # Return the charge result as a list and the JSON response        
-    return jsonify(json_response)
+    return json_response

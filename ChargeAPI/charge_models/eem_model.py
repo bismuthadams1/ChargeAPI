@@ -1,7 +1,7 @@
 """Existing EEM 2015 model available in OpenBabel https://open-babel.readthedocs.io/en/latest/Charges/charges.html
 """
 
-from source.charge_models.base_class import ExternalChargeModel
+from ChargeAPI.charge_models.base_class import ExternalChargeModel
 from openbabel import openbabel as ob
 from openbabel import pybel
 import argparse
@@ -77,7 +77,7 @@ class EEM_model(ExternalChargeModel):
         """
 
         openff_molecule = Molecule.from_mapped_smiles(tagged_smiles)
-        #because openmm uses openff infrastructure with openmm units, need to modify the class here with to_openmm
+        #because openmm uses openff infrastructure with openmm units, need to modify the unit class here with to_openmm()
         openff_molecule.add_conformer(to_openmm(conformer))
 
         return openff_molecule

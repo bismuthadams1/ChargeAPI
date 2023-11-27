@@ -112,7 +112,7 @@ class ExternalChargeModel:
         """
 
         openff_molecule = Molecule.from_mapped_smiles(tagged_smiles)
-        print(f'conformer is {type(conformer)}')
+     #   print(f'conformer is {type(conformer)}')
         openff_molecule.add_conformer(conformer)
 
         return openff_molecule
@@ -186,36 +186,3 @@ class ExternalChargeModel:
         -------
         returns charges as a list of lists (charges for each atom for each molecule)
         """
-
-    # def to_json(self, charges: list[float], molecule: list[Chem.Mol]):
-    #     """Write charges to json file
-
-    #     Parameters
-    #     ----------
-    #     charges: List of List of float
-    #         Lists of charges, each set of charges being a list of floating point values
-    #     molecules: List of rdkit.Chem.Mol objects
-    #         List of molecules, each molecule should have had Name property set
-            
-    #     Returns
-    #     -------
-    #     json_file: List of str
-    #       files containing each set of charges
-    #     """
-        
-    #     json_file = + "_charges.json" #get_valid_id_name() 
-
-    #     charge_dict = {}
-    #     for charge_set, molecule in zip(charges, molecules):
-    #         mol_name = molecule.GetProp("_Name")
-    #         if mol_name == "reference":
-    #             charge_dict = charge_set
-    #         else:
-    #             charge_dict[mol_name] = charge_set
-        
-
-    #     LOGGER.info(charge_dict)
-
-    #     json.dump(charge_dict, open(json_file, "w"))
-
-    #     return json_file

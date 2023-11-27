@@ -21,7 +21,7 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
     json_data = json.loads(json_data)
     #extract the data from the json
     conformer = json_data['conformer']
-    tagged_smiles = json_data['tagged_smiles']
+    mapped_smiles = json_data['mapped_smiles']
     temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False)
        
     # Write conformer data to the temporary file
@@ -35,7 +35,7 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
             case 'EEM':
                 script_path = os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
                 cmd = (
-                    f"conda run -n openbabel python {script_path} {tagged_smiles} {conformer_file_path}"
+                    f"conda run -n openbabel python {script_path} {mapped_smiles} {conformer_file_path}"
                 )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 #remove temporary file containing conformer
@@ -44,7 +44,7 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
             case 'MBIS':
                 script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
                 cmd = (
-                            f"conda run -n nagl-mbis python -m {script_path} {tagged_smiles} {conformer_file_path}"
+                            f"conda run -n nagl-mbis python -m {script_path} {mapped_smiles} {conformer_file_path}"
                         )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 #remove temporary file containing conformer

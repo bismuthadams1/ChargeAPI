@@ -59,29 +59,6 @@ class EEM_model(ExternalChargeModel):
         """
         return super().__call__(conformer_file_path)
     
-
-    # def convert_to_openff_mol(self, mapped_smiles: str, conformer: np.ndarray):
-    #     """Convert the molecule to openff.Molecule format 
-        
-    #     Parameters
-    #     ----------
-    #     mapped_smiles: string
-    #         Mapped smiles with indicies linked to the conformer
-    #     conformer: np.ndarray (n_atoms,3)
-    #         Conformer 
-        
-    #     Returns
-    #     -------
-    #     openff_molecule: openff_molecule format
-    #         Files containing molecules, to be used in external code
-    #     """
-
-    #     openff_molecule = Molecule.from_mapped_smiles(mapped_smiles)
-    #     #because openmm uses openff infrastructure with openmm units, need to modify the unit class here with to_openmm()
-    #     openff_molecule.add_conformer(to_openmm(conformer))
-
-    #     return openff_molecule
-
     def convert_to_charge_format(self, conformer_file_path: str):
         """Convert openff molecule to appropriate format on which to assign charges
 

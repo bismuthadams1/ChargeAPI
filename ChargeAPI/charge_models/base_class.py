@@ -47,10 +47,8 @@ class ExternalChargeModel:
 
         Parameters
         ----------
-        mapped_smiles: mapped smiles 
-            Molecule to run charge calculation on
         conformer_file_path: str
-            file path to the conformer.
+            file path to the temporary file contianing the xyz conformer.
         file_type: str
             Type of file to output charges to [default = json]
         file_method: bool
@@ -61,7 +59,6 @@ class ExternalChargeModel:
             Files containing charges for each molecule
             
         """
-        #conformer = self._file_to_conformer(conformer_file_path)
         charge_format = self.convert_to_charge_format(conformer_file_path)
         #if the charge model requires generation and reading of files to produce charges
         if file_method:
@@ -92,29 +89,6 @@ class ExternalChargeModel:
             conformer = np.array(json.loads(conformer_string)).reshape(-1,3) 
             conformer = conformer * unit.angstrom
             return conformer 
-
-
-    # def convert_to_openff_mol(self, mapped_smiles: str, conformer: np.ndarray):
-    #     """Convert the molecule to openff.Molecule format 
-        
-    #     Parameters
-    #     ----------
-    #     mapped_smiles: string
-    #         Mapped smiles with indicies linked to the conformer
-    #     conformer: np.ndarray (n_atoms,3)
-    #         Conformer 
-        
-    #     Returns
-    #     -------
-    #     openff_molecule: openff_molecule format
-    #         Files containing molecules, to be used in external code
-    #     """
-
-    #     openff_molecule = Molecule.from_mapped_smiles(mapped_smiles)
-    #  #   print(f'conformer is {type(conformer)}')
-    #     openff_molecule.add_conformer(conformer)
-
-    #     return openff_molecule
 
     def convert_to_charge_format(self, conformer_file_path: str):
         """Convert openff molecule to appropriate format on which to assign charges
@@ -150,7 +124,7 @@ class ExternalChargeModel:
 
         Parameters
         ----------
-        openff_molecule: openff.topology.Molecule
+        charge format: any
             Molecule to convert to temporary file
         
         Returns

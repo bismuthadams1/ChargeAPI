@@ -15,6 +15,7 @@ from abc import abstractmethod
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.ERROR)
+logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 EXT_CHARGE_MODELS = {}
 
@@ -70,25 +71,6 @@ class ExternalChargeModel:
             charges = self.assign_charges(charge_format)
 
         return charges
-
-    def _file_to_conformer(self, conformer_file_path: str) -> np.ndarray:
-        """Open file and provide conformer as np.ndarray
-
-        Parameters
-        ----------
-        conformer_file_path: string
-            File path of the temporary file containing the conformer
-        Returns
-        -------
-        conformer: np.ndarray
-            Conformer array of shape (n_atoms, 3)
-        """
-        with open(conformer_file_path, "r") as tempfile:
-            tempfile.seek(0)
-            conformer_string = tempfile.read()
-            conformer = np.array(json.loads(conformer_string)).reshape(-1,3) 
-            conformer = conformer * unit.angstrom
-            return conformer 
 
     def convert_to_charge_format(self, conformer_file_path: str):
         """Convert openff molecule to appropriate format on which to assign charges

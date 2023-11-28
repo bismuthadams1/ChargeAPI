@@ -15,7 +15,8 @@ from openff.toolkit.topology import Molecule
 
 
 #supress openff warnings
-logging.getLogger("openff").setLevel(logging.CRITICAL)
+#logging.getLogger("openff").setLevel(logging.CRITICAL)
+logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 class EEM_model(ExternalChargeModel):
 
@@ -64,8 +65,8 @@ class EEM_model(ExternalChargeModel):
 
         Parameters
         ----------
-        conformer_file_path: openff.topology.Molecule
-            Molecule to conver to appropriate format
+        conformer_file_path: string
+            File path to the xyz to conver to appropriate format
         
         Returns
         -------
@@ -75,6 +76,7 @@ class EEM_model(ExternalChargeModel):
         """
         #read file is an iterator so can read multiple eventually
         ob_mol = next(pybel.readfile('xyz',conformer_file_path))
+      #  logging.info(f'the openbabel molecule is {ob_mol}')
         ob_mol = ob_mol.OBMol
         return ob_mol
     
@@ -93,19 +95,21 @@ class EEM_model(ExternalChargeModel):
         charge_model = ob.OBChargeModel.FindType("eem2015bn")
         charge_model.ComputeCharges(ob_mol)
         charges = [atom.GetPartialCharge() for atom in ob.OBMolAtomIter(ob_mol)]
-
+       # logging.info(f'the charges coming out of assign_charges are: {charges}')
         return charges
 
 if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='EEM charge model arguments')
-   # parser.add_argument('mapped_smiles', type=str, help='Mapped SMILES representation')
     parser.add_argument('conformer', type=str, help='Conformer file path')
-
     args = parser.parse_args()
+    #logging.info(f'the file path is: {args}')
+
     eem_model = EEM_model()
     charges = eem_model(conformer_file_path = args.conformer) 
+    #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)
+    #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
 
 
 

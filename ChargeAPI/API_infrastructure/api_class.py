@@ -24,8 +24,10 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
     """
     json_data = request.get_json()
     json_data = json.loads(json_data)
+    print(json_data)
     #extract the data from the json
     conformer_xyz = json_data['conformer_xyz']
+    print(conformer_xyz)
     temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.xyz')
        
     # Write conformer data to the temporary file

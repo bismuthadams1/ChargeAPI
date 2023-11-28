@@ -26,12 +26,12 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
     json_data = json.loads(json_data)
     print(json_data)
     #extract the data from the json
-    conformer_xyz = json_data['conformer_xyz']
-    print(conformer_xyz)
-    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.xyz')
+    conformer_mol = json_data['conformer_mol']
+
+    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.mol')
        
     # Write conformer data to the temporary file
-    temp_file.write(conformer_xyz)
+    temp_file.write(conformer_mol)
     temp_file.flush()
     
     #find full file path of tempfile

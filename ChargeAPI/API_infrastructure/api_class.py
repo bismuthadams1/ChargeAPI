@@ -16,16 +16,20 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
     ---------
     charge_model: str
         Charge model to chose from the switch statement
+
+    Returns
+    -------
+    json: json
+        Json dictionary of calculation results, including errors.
     """
     json_data = request.get_json()
     json_data = json.loads(json_data)
     #extract the data from the json
-    conformer = json_data['conformer']
-    mapped_smiles = json_data['mapped_smiles']
-    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+    conformer_xyz = json_data['conformer_xyz']
+    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.xyz')
        
     # Write conformer data to the temporary file
-    json.dump(conformer, temp_file)
+    temp_file.write(conformer_xyz)
     temp_file.flush()
     
     #find full file path of tempfile
@@ -35,7 +39,7 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
             case 'EEM':
                 script_path = os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
                 cmd = (
-                    f"conda run -n openbabel python {script_path} {mapped_smiles} {conformer_file_path}"
+                    f"conda run -n openbabel python {script_path} {conformer_file_path}"
                 )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 #remove temporary file containing conformer
@@ -44,7 +48,7 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
             case 'MBIS':
                 script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
                 cmd = (
-                            f"conda run -n nagl-mbis python -m {script_path} {mapped_smiles} {conformer_file_path}"
+                            f"conda run -n nagl-mbis python -m {script_path}  {conformer_file_path}"
                         )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 #remove temporary file containing conformer

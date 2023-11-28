@@ -42,7 +42,7 @@ class ExternalChargeModel:
         """
 
     @abstractmethod
-    def __call__(self, mapped_smiles: str, conformer_file_path: str, file_method = False):
+    def __call__(self, conformer_file_path: str, file_method = False):
         """Get charges for molecule.
 
         Parameters
@@ -61,16 +61,15 @@ class ExternalChargeModel:
             Files containing charges for each molecule
             
         """
-        conformer = self._file_to_conformer(conformer_file_path)
-        openff_molecule = self.convert_to_openff_mol(mapped_smiles, conformer)
+        #conformer = self._file_to_conformer(conformer_file_path)
+        charge_format = self.convert_to_charge_format(conformer_file_path)
         #if the charge model requires generation and reading of files to produce charges
         if file_method:
-            file_path = self.generate_temp_files(openff_molecule)
+            file_path = self.generate_temp_files(charge_format)
             charge_file_path = self.run_external_code(file_path)
             charges = self.read_charge_output(charge_file_path)
         #other charge model types will produce charges based on python objects in internal memory
         else:
-            charge_format = self.convert_to_charge_format(openff_molecule)
             charges = self.assign_charges(charge_format)
 
         return charges
@@ -95,35 +94,35 @@ class ExternalChargeModel:
             return conformer 
 
 
-    def convert_to_openff_mol(self, mapped_smiles: str, conformer: np.ndarray):
-        """Convert the molecule to openff.Molecule format 
+    # def convert_to_openff_mol(self, mapped_smiles: str, conformer: np.ndarray):
+    #     """Convert the molecule to openff.Molecule format 
         
-        Parameters
-        ----------
-        mapped_smiles: string
-            Mapped smiles with indicies linked to the conformer
-        conformer: np.ndarray (n_atoms,3)
-            Conformer 
+    #     Parameters
+    #     ----------
+    #     mapped_smiles: string
+    #         Mapped smiles with indicies linked to the conformer
+    #     conformer: np.ndarray (n_atoms,3)
+    #         Conformer 
         
-        Returns
-        -------
-        openff_molecule: openff_molecule format
-            Files containing molecules, to be used in external code
-        """
+    #     Returns
+    #     -------
+    #     openff_molecule: openff_molecule format
+    #         Files containing molecules, to be used in external code
+    #     """
 
-        openff_molecule = Molecule.from_mapped_smiles(mapped_smiles)
-     #   print(f'conformer is {type(conformer)}')
-        openff_molecule.add_conformer(conformer)
+    #     openff_molecule = Molecule.from_mapped_smiles(mapped_smiles)
+    #  #   print(f'conformer is {type(conformer)}')
+    #     openff_molecule.add_conformer(conformer)
 
-        return openff_molecule
+    #     return openff_molecule
 
-    def convert_to_charge_format(self, openff_molecule: 'Molecule'):
+    def convert_to_charge_format(self, conformer_file_path: str):
         """Convert openff molecule to appropriate format on which to assign charges
 
         Parameters
         ----------
-        openff_molecule: openff.topology.Molecule
-            Molecule to conver to appropriate format
+        conformer_file_path: string
+            String to xyz file
         
         Returns
         -------
@@ -146,7 +145,7 @@ class ExternalChargeModel:
         
         """
 
-    def generate_temp_files(self, openff_molecule: 'Molecule'):
+    def generate_temp_files(self, charge_format: any):
         """Generate the temporary files required to run charge model
 
         Parameters

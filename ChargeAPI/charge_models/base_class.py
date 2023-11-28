@@ -78,7 +78,7 @@ class ExternalChargeModel:
         Parameters
         ----------
         conformer_file_path: string
-            String to xyz file
+            String to mol file
         
         Returns
         -------

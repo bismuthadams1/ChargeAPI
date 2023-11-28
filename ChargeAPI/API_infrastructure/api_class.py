@@ -90,7 +90,7 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
 
 def main():
     #run the app
-    app.run(debug=True)
+    app.run(threaded=True)
 
 if __name__ == '__main__':
     main()

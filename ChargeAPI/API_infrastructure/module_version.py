@@ -17,7 +17,7 @@ def handle_charge_request(charge_model: str, conformer_mol: str) -> dict[str,any
     #flatten to list for json
     #conformer = conformer.flatten().tolist()
 
-    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.xyz')
+    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.mol')
        
     # Write conformer data to the temporary file
     temp_file.write(conformer_mol)
@@ -28,17 +28,17 @@ def handle_charge_request(charge_model: str, conformer_mol: str) -> dict[str,any
 
     match charge_model:
         case 'EEM':
-            script_path = os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
-            cmd = (
-                f"conda run -n openbabel python {script_path} {conformer_file_path}"
-            )
-            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            # eem_model = EEM_model()
-            # result = eem_model(conformer_file_path=conformer_file_path) 
-            os.remove(conformer_file_path)
+            # script_path = os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
+            # cmd = (
+            #     f"conda run -n openbabel python {script_path} {conformer_file_path}"
+            # )
+            # charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            eem_model = EEM_model()
+            result = eem_model(conformer_file_path=conformer_file_path) 
+           # os.remove(conformer_file_path)
 
-            return prepare_json_outs(charge_result)
-            #return result
+            #return prepare_json_outs(charge_result)
+            return result
         case 'MBIS':
             script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
             cmd = (
@@ -68,3 +68,12 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
     logging.info(json_response)
     # Return the charge result as a list and the JSON response        
     return json_response
+
+def main():
+    mol = '\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n   -0.7890   -0.1982   -0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0061    0.3917   -0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7951   -0.1936    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\nM  END\n'
+    json_result = handle_charge_request(charge_model = 'EEM', 
+                                                    conformer_mol = mol)
+
+
+if __name__ == '__main__':
+    main()

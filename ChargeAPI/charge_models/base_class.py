@@ -24,7 +24,6 @@ class ExternalChargeModel:
     """
 
     _name = None
-
     def __init_subclass__(cls, *args, **kwargs):
         """
         Catch any new external charge models (all external charge models must inherit

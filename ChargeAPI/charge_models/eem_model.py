@@ -12,6 +12,7 @@ import tempfile
 from openff.units import unit
 from openff.units.openmm import from_openmm, to_openmm
 from openff.toolkit.topology import Molecule
+from line_profiler import LineProfiler
 
 
 #supress openff warnings
@@ -97,7 +98,7 @@ class EEM_model(ExternalChargeModel):
         charges = [atom.GetPartialCharge() for atom in ob.OBMolAtomIter(ob_mol)]
        # logging.info(f'the charges coming out of assign_charges are: {charges}')
         return charges
-
+    
 if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='EEM charge model arguments')
@@ -108,8 +109,11 @@ if __name__ == "__main__":
     eem_model = EEM_model()
     charges = eem_model(conformer_file_path = args.conformer) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
-    print(charges)
+    #print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
+    lp = LineProfiler()
+    lp.add_module(EEM_model)
+    print(lp.print_stats())
 
 
 

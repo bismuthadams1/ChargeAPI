@@ -66,7 +66,7 @@ class EEM_model(ExternalChargeModel):
         Parameters
         ----------
         conformer_file_path: string
-            File path to the xyz to conver to appropriate format
+            File path to the mol to conver to appropriate format
         
         Returns
         -------
@@ -75,7 +75,7 @@ class EEM_model(ExternalChargeModel):
         
         """
         #read file is an iterator so can read multiple eventually
-        ob_mol = next(pybel.readfile('xyz',conformer_file_path))
+        ob_mol = next(pybel.readfile('mol',conformer_file_path))
       #  logging.info(f'the openbabel molecule is {ob_mol}')
         ob_mol = ob_mol.OBMol
         return ob_mol

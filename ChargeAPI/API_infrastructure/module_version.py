@@ -10,7 +10,7 @@ from ChargeAPI.charge_models.eem_model import EEM_model
 
 logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
-def handle_charge_request(charge_model: str, conformer_xyz: str) -> dict[str,any]:
+def handle_charge_request(charge_model: str, conformer_mol: str) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model
     """
@@ -20,7 +20,7 @@ def handle_charge_request(charge_model: str, conformer_xyz: str) -> dict[str,any
     temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.xyz')
        
     # Write conformer data to the temporary file
-    temp_file.write(conformer_xyz)
+    temp_file.write(conformer_mol)
     temp_file.flush()
     
     #find full file path of tempfile

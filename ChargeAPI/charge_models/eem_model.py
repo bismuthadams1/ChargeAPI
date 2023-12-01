@@ -9,10 +9,10 @@ import subprocess
 import numpy as np
 import logging
 import tempfile
-from openff.units import unit
-from openff.units.openmm import from_openmm, to_openmm
-from openff.toolkit.topology import Molecule
-from line_profiler import LineProfiler
+#from openff.units import unit
+#from openff.units.openmm import from_openmm, to_openmm
+#from openff.toolkit.topology import Molecule
+#from line_profiler import LineProfiler
 
 
 #supress openff warnings
@@ -109,11 +109,11 @@ if __name__ == "__main__":
     eem_model = EEM_model()
     charges = eem_model(conformer_file_path = args.conformer) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
-    #print(charges)
+    print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
-    lp = LineProfiler()
-    lp.add_module(EEM_model)
-    print(lp.print_stats())
+   # lp = LineProfiler()
+   # lp.add_module(EEM_model)
+   # print(lp.print_stats())
 
 
 

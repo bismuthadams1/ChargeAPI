@@ -7,6 +7,7 @@ import os
 import logging
 
 from ChargeAPI.charge_models.eem_model import EEM_model
+import ChargeAPI
 
 logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
@@ -26,28 +27,28 @@ def handle_charge_request(charge_model: str, conformer_mol: str) -> dict[str,any
     #find full file path of tempfile
     conformer_file_path = temp_file.name
 
-    match charge_model:
-        case 'EEM':
-            # script_path = os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
-            # cmd = (
-            #     f"conda run -n openbabel python {script_path} {conformer_file_path}"
-            # )
-            # charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            eem_model = EEM_model()
-            result = eem_model(conformer_file_path=conformer_file_path) 
+    if charge_model == 'EEM':
+            script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/eem_model.py'
+           # os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
+            cmd = (
+                f"conda run -n openbabel python {script_path} {conformer_file_path}"
+            )
+            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            # eem_model = EEM_model()
+            # result = eem_model(conformer_file_path=conformer_file_path) 
            # os.remove(conformer_file_path)
 
-            #return prepare_json_outs(charge_result)
-            return result
-        case 'MBIS':
-            script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
+            return prepare_json_outs(charge_result)
+            # return result
+    elif 'MBIS':
+            script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model.py'
             cmd = (
                         f"conda run -n nagl-mbis python -m {script_path} {conformer_file_path}"
                     )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             os.remove(conformer_file_path)
             return prepare_json_outs(charge_result)
-        case _:
+    else:
             raise NameError
 
 def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:

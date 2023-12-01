@@ -8,8 +8,8 @@ import tempfile
 
 
 from rdkit import Chem
-from openff.toolkit.topology import Molecule
-from openff.units import unit
+#from openff.toolkit.topology import Molecule
+#from openff.units import unit
 
 from abc import abstractmethod
 

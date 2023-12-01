@@ -42,7 +42,7 @@ class ExternalChargeModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_file_path: str, file_method = False):
+    def __call__(self, conformer_mol: str, file_method = False):
         """Get charges for molecule.
 
         Parameters
@@ -59,7 +59,7 @@ class ExternalChargeModel:
             Files containing charges for each molecule
             
         """
-        charge_format = self.convert_to_charge_format(conformer_file_path)
+        charge_format = self.convert_to_charge_format(conformer_mol)
         #if the charge model requires generation and reading of files to produce charges
         if file_method:
             file_path = self.generate_temp_files(charge_format)
@@ -71,12 +71,12 @@ class ExternalChargeModel:
 
         return charges
 
-    def convert_to_charge_format(self, conformer_file_path: str):
+    def convert_to_charge_format(self, conformer_mol: str):
         """Convert openff molecule to appropriate format on which to assign charges
 
         Parameters
         ----------
-        conformer_file_path: string
+        conformer_mol: string
             String to mol file
         
         Returns

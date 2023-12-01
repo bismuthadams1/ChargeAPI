@@ -15,38 +15,20 @@ def handle_charge_request(charge_model: str, conformer_mol: str) -> dict[str,any
     """
     handle the charge request and run the correct charge model
     """
-    #flatten to list for json
-    #conformer = conformer.flatten().tolist()
-
-    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.mol')
-       
-    # Write conformer data to the temporary file
-    temp_file.write(conformer_mol)
-    temp_file.flush()
-    
-    #find full file path of tempfile
-    conformer_file_path = temp_file.name
 
     if charge_model == 'EEM':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/eem_model.py'
-           # os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
             cmd = (
-                f"conda run -n openbabel python {script_path} {conformer_file_path}"
+                f"conda run -n openbabel python {script_path} '{conformer_mol}'"
             )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            # eem_model = EEM_model()
-            # result = eem_model(conformer_file_path=conformer_file_path) 
-           # os.remove(conformer_file_path)
-
             return prepare_json_outs(charge_result)
-            # return result
     elif 'MBIS':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model.py'
             cmd = (
-                        f"conda run -n nagl-mbis python -m {script_path} {conformer_file_path}"
+                        f"conda run -n nagl-mbis python -m {script_path} '{conformer_mol}'"
                     )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            os.remove(conformer_file_path)
             return prepare_json_outs(charge_result)
     else:
             raise NameError

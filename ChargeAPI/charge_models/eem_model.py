@@ -8,14 +8,7 @@ import argparse
 import subprocess
 import numpy as np
 import logging
-import tempfile
-from openff.units import unit
-from openff.units.openmm import from_openmm, to_openmm
-from openff.toolkit.topology import Molecule
 
-
-#supress openff warnings
-#logging.getLogger("openff").setLevel(logging.CRITICAL)
 logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 class EEM_model(ExternalChargeModel):
@@ -40,15 +33,15 @@ class EEM_model(ExternalChargeModel):
 
         return self.available
 
-    def __call__(self,  conformer_file_path: str, file_method: bool = False):
+    def __call__(self,  conformer_mol: str, file_method: bool = False):
         """Get charges for molecule.
 
         Parameters
         ----------
         mapped_smiles: mapped smiles 
             Molecule to run charge calculation on
-        conformer: np.ndarray (n_atoms, 3)
-            co
+        conformer_mol: str
+            conformer in mol format
         file_type: str
             Type of file to output charges to [default = json]
         file_method: bool
@@ -58,14 +51,14 @@ class EEM_model(ExternalChargeModel):
         charge_files: List of str
             Files containing charges for each molecule
         """
-        return super().__call__(conformer_file_path)
+        return super().__call__(conformer_mol)
     
-    def convert_to_charge_format(self, conformer_file_path: str):
+    def convert_to_charge_format(self, conformer_mol: str):
         """Convert openff molecule to appropriate format on which to assign charges
 
         Parameters
         ----------
-        conformer_file_path: string
+        conoformer_mol: string
             File path to the mol to conver to appropriate format
         
         Returns
@@ -75,8 +68,7 @@ class EEM_model(ExternalChargeModel):
         
         """
         #read file is an iterator so can read multiple eventually
-        ob_mol = next(pybel.readfile('mol',conformer_file_path))
-      #  logging.info(f'the openbabel molecule is {ob_mol}')
+        ob_mol = pybel.readstring('mol',conformer_mol)
         ob_mol = ob_mol.OBMol
         return ob_mol
     
@@ -95,21 +87,20 @@ class EEM_model(ExternalChargeModel):
         charge_model = ob.OBChargeModel.FindType("eem2015bn")
         charge_model.ComputeCharges(ob_mol)
         charges = [atom.GetPartialCharge() for atom in ob.OBMolAtomIter(ob_mol)]
-       # logging.info(f'the charges coming out of assign_charges are: {charges}')
         return charges
-
+    
 if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='EEM charge model arguments')
     parser.add_argument('conformer', type=str, help='Conformer file path')
     args = parser.parse_args()
-    #logging.info(f'the file path is: {args}')
 
     eem_model = EEM_model()
-    charges = eem_model(conformer_file_path = args.conformer) 
+    charges = eem_model(conformer_mol = args.conformer) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
+
 
 
 

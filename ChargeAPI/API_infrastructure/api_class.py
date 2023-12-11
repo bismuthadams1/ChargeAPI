@@ -12,7 +12,7 @@ app = Flask(__name__)
 #logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 @app.route('/charge/<charge_model>', methods = ['GET','POST'])
-def handle_charge_request(charge_model: str) -> dict[str,any]:
+def handle_charge_request(charge_model: str, batched: bool = False) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model
     Parameters
@@ -30,11 +30,16 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
     #extract the data from the json
     conformer_mol = json_data['conformer_mol']
 
+    if batched:
+        batched = '--batched'
+    else:
+        batched = '--not_batched'
+
     match charge_model:
             case 'EEM':
                 script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/eem_model.py'
                 cmd = (
-                    f"conda run -n openbabel python {script_path} '{conformer_mol}'"
+                    f"conda run -n openbabel python {script_path} --conformer '{conformer_mol}' {batched}"
                 )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
@@ -42,7 +47,7 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
             case 'MBIS':
                 script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model.py'
                 cmd = (
-                            f"conda run -n nagl-mbis python -m {script_path}  '{conformer_mol}'"
+                            f"conda run -n nagl-mbis python -m {script_path}  --conformer '{conformer_mol}' --batched {batched}"
                         )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 

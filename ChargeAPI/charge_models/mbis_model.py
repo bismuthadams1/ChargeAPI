@@ -18,6 +18,28 @@ class MBIS_Model(ExternalChargeModel):
 
     _name = "naglmbis"
 
+    def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int] | None:
+        """Get charges for molecule.
+
+        Parameters
+        ----------
+        mapped_smiles: mapped smiles 
+            Molecule to run charge calculation on
+        conformer_mol: str
+            conformer in mol format
+        file_type: str
+            Type of file to output charges to [default = json]
+        file_method: bool
+            Some charge models require temporary files to be written and read, others use python objects stored in internal memory
+        Returns
+        -------
+        charge_files: List of str
+            list containing charges for the molecule or filepath to charges for each conformer
+        """
+        
+        return super().__call__(conformer_mol = conformer_mol, batched = batched)
+
+
     def check_code_availability(self):
         """Check external code can be run
         """
@@ -48,11 +70,16 @@ class MBIS_Model(ExternalChargeModel):
 if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='MBIS charge model arguments')
-    parser.add_argument('conformer', type=str, help='Conformer mol')
+    parser.add_argument('--conformer', type=str, help='Conformer mol')
+    parser.add_argument('--batched', help='Batch charges or not', action='store_true')
+    parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
+    parser.set_defaults(batched = False)
+
+
     args = parser.parse_args()
 
     mbis_model = MBIS_Model()
-    charges = mbis_model(conformer_mol = args.conformer) 
+    charges = mbis_model(conformer_mol = args.conformer, batched = args.batched) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~

@@ -42,7 +42,7 @@ class ExternalChargeModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_mol: str, file_method = False, batched = False) -> list[int]:
+    def __call__(self, conformer_mol: str, file_method = False, batched = False) -> list[int] | None:
         """Get charges for molecule.
 
         Parameters
@@ -60,10 +60,12 @@ class ExternalChargeModel:
         Returns
         -------
         charges: List of int
-            list containing charges for the molecule or 
+            list containing charges for the molecule or filepath to charges for each conformer
             
         """
-        if batched == False:
+        if not batched:
+            logging.info('not batched option chosen')
+
             charge_format = self.convert_to_charge_format(conformer_mol)
             #if the charge model requires generation and reading of files to produce charges
             if file_method:
@@ -73,18 +75,24 @@ class ExternalChargeModel:
             #other charge model types will produce charges based on python objects in internal memory
             else:
                 charges = self.assign_charges(charge_format)
-            
             return charges
 
         else:
+            logging.info(' batched option chosen')
+
+            #make dictionary from json file
             mol_dictionary = self.molfile_to_dict(conformer_mol)
             for mol in mol_dictionary.items():
                 charge_format = self.convert_to_charge_format(mol[1])
                 charges = self.assign_charges(charge_format)
                 mol_dictionary[mol[0]] = charges
             #write charges dictionary to file
-            with open("charges.json","w") as outfile:
+            charge_file = "charges.json"
+            with open(charge_file,"w") as outfile:
                 json.dump(mol_dictionary, outfile, indent=2)
+                charge_file_path = os.path.abspath(charge_file)
+            return charge_file_path
+
 
 
     def convert_to_charge_format(self, conformer_mol: str):

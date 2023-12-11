@@ -33,7 +33,7 @@ class EEM_model(ExternalChargeModel):
 
         return self.available
 
-    def __call__(self,  conformer_mol: str, file_method: bool = False) -> list[int]:
+    def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int]:
         """Get charges for molecule.
 
         Parameters
@@ -52,7 +52,7 @@ class EEM_model(ExternalChargeModel):
             Files containing charges for each molecule
         """
         
-        return super().__call__(conformer_mol)
+        return super().__call__(conformer_mol = conformer_mol, batched = batched)
     
     def convert_to_charge_format(self, conformer_mol: str) -> ob.OBMol:
         """Convert openff molecule to appropriate format on which to assign charges
@@ -96,6 +96,7 @@ if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='EEM charge model arguments')
     parser.add_argument('conformer', type=str, help='Conformer mol')
+    parser.add_argument('batched', type=bool, help='Batch charges or not')
     args = parser.parse_args()
 
     eem_model = EEM_model()

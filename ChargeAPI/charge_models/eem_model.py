@@ -33,7 +33,7 @@ class EEM_model(ExternalChargeModel):
 
         return self.available
 
-    def __call__(self,  conformer_mol: str, file_method: bool = False):
+    def __call__(self,  conformer_mol: str, file_method: bool = False) -> list[int]:
         """Get charges for molecule.
 
         Parameters
@@ -51,15 +51,16 @@ class EEM_model(ExternalChargeModel):
         charge_files: List of str
             Files containing charges for each molecule
         """
+        
         return super().__call__(conformer_mol)
     
-    def convert_to_charge_format(self, conformer_mol: str):
+    def convert_to_charge_format(self, conformer_mol: str) -> ob.OBMol:
         """Convert openff molecule to appropriate format on which to assign charges
 
         Parameters
         ----------
         conoformer_mol: string
-            File path to the mol to conver to appropriate format
+            File path to the mol to convert to appropriate format
         
         Returns
         -------
@@ -72,7 +73,7 @@ class EEM_model(ExternalChargeModel):
         ob_mol = ob_mol.OBMol
         return ob_mol
     
-    def assign_charges(self, ob_mol: pybel.Molecule):
+    def assign_charges(self, ob_mol: pybel.Molecule) -> list[float]:
         """Assign charges according to charge model selected
 
         Parameters
@@ -87,12 +88,14 @@ class EEM_model(ExternalChargeModel):
         charge_model = ob.OBChargeModel.FindType("eem2015bn")
         charge_model.ComputeCharges(ob_mol)
         charges = [atom.GetPartialCharge() for atom in ob.OBMolAtomIter(ob_mol)]
+        #logging.info(f'assigne charges run with charges: {charges}')
+
         return charges
     
 if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='EEM charge model arguments')
-    parser.add_argument('conformer', type=str, help='Conformer file path')
+    parser.add_argument('conformer', type=str, help='Conformer mol')
     args = parser.parse_args()
 
     eem_model = EEM_model()

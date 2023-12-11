@@ -5,11 +5,14 @@ from flask import Flask, request, jsonify
 from multiprocessing import Process
 import json
 import os
+#import logging
+import ChargeAPI
 
 app = Flask(__name__)
+#logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 @app.route('/charge/<charge_model>', methods = ['GET','POST'])
-def handle_charge_request(charge_model: str) -> dict[str,any]:
+def handle_charge_request(charge_model: str, batched: bool = False) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model
     Parameters
@@ -24,37 +27,30 @@ def handle_charge_request(charge_model: str) -> dict[str,any]:
     """
     json_data = request.get_json()
     json_data = json.loads(json_data)
-    print(json_data)
     #extract the data from the json
     conformer_mol = json_data['conformer_mol']
 
-    temp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.mol')
-       
-    # Write conformer data to the temporary file
-    temp_file.write(conformer_mol)
-    temp_file.flush()
-    
-    #find full file path of tempfile
-    conformer_file_path = temp_file.name
+    if batched:
+        batched = '--batched'
+    else:
+        batched = '--not_batched'
 
     match charge_model:
             case 'EEM':
-                script_path = os.path.abspath('../ChargeAPI/charge_models/eem_model.py')
+                script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/eem_model.py'
                 cmd = (
-                    f"conda run -n openbabel python {script_path} {conformer_file_path}"
+                    f"conda run -n openbabel python {script_path} --conformer '{conformer_mol}' {batched}"
                 )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                #remove temporary file containing conformer
-                os.remove(conformer_file_path)
+
                 return prepare_json_outs(charge_result)
             case 'MBIS':
-                script_path = os.path.abspath('../ChargeAPI/charge_models/mbis_model.py')
+                script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model.py'
                 cmd = (
-                            f"conda run -n nagl-mbis python -m {script_path}  {conformer_file_path}"
+                            f"conda run -n nagl-mbis python -m {script_path}  --conformer '{conformer_mol}' --batched {batched}"
                         )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                #remove temporary file containing conformer
-                os.remove(conformer_file_path)
+
                 return prepare_json_outs(charge_result)
             case _:
                 raise NameError
@@ -85,12 +81,17 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
         'charge_result': charge_result_list,
         'error': charge_result.stderr.decode()  # Include the error message if any
     }
-    # Return the charge result as a list and the JSON response        
+    # Return the charge result as a list and the JSON response   
+    #logging.info(f'assigne charges run with charges: {charges}')
+     
     return jsonify(json_response)
 
 def main():
     #run the app
-    app.run(debug=True)
+    #app.run(debug=True,threaded=True)
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=5000)
+
 
 if __name__ == '__main__':
     main()

@@ -15,7 +15,7 @@ from abc import abstractmethod
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.ERROR)
-logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
+#logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 EXT_CHARGE_MODELS = {}
 
@@ -42,7 +42,7 @@ class ExternalChargeModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_mol: str, file_method = False):
+    def __call__(self, conformer_mol: str, file_method = False) -> list[int]:
         """Get charges for molecule.
 
         Parameters
@@ -55,8 +55,8 @@ class ExternalChargeModel:
             Some charge models require temporary files to be written and read, others use python objects stored in internal memory
         Returns
         -------
-        charge_files: List of str
-            Files containing charges for each molecule
+        charges: List of int
+            list containing charges for the molecule
             
         """
         charge_format = self.convert_to_charge_format(conformer_mol)

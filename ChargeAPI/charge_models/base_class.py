@@ -42,34 +42,50 @@ class ExternalChargeModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_mol: str, file_method = False) -> list[int]:
+    def __call__(self, conformer_mol: str, file_method = False, batched = False) -> list[int]:
         """Get charges for molecule.
 
         Parameters
         ----------
         conformer_file_path: str
-            file path to the temporary file contianing the xyz conformer.
+            if batched == True, this is the file path to the temporary file 
+            containing the conformer. If batched == False, this will just be
+            mol string. 
         file_type: str
             Type of file to output charges to [default = json]
         file_method: bool
             Some charge models require temporary files to be written and read, others use python objects stored in internal memory
+        batched: bool
+            Batch
         Returns
         -------
         charges: List of int
-            list containing charges for the molecule
+            list containing charges for the molecule or 
             
         """
-        charge_format = self.convert_to_charge_format(conformer_mol)
-        #if the charge model requires generation and reading of files to produce charges
-        if file_method:
-            file_path = self.generate_temp_files(charge_format)
-            charge_file_path = self.run_external_code(file_path)
-            charges = self.read_charge_output(charge_file_path)
-        #other charge model types will produce charges based on python objects in internal memory
-        else:
-            charges = self.assign_charges(charge_format)
+        if batched == False:
+            charge_format = self.convert_to_charge_format(conformer_mol)
+            #if the charge model requires generation and reading of files to produce charges
+            if file_method:
+                file_path = self.generate_temp_files(charge_format)
+                charge_file_path = self.run_external_code(file_path)
+                charges = self.read_charge_output(charge_file_path)
+            #other charge model types will produce charges based on python objects in internal memory
+            else:
+                charges = self.assign_charges(charge_format)
+            
+            return charges
 
-        return charges
+        else:
+            mol_dictionary = self.molfile_to_dict(conformer_mol)
+            for mol in mol_dictionary.items():
+                charge_format = self.convert_to_charge_format(mol[1])
+                charges = self.assign_charges(charge_format)
+                mol_dictionary[mol[0]] = charges
+            #write charges dictionary to file
+            with open("charges.json","w") as outfile:
+                json.dump(mol_dictionary, outfile, indent=2)
+
 
     def convert_to_charge_format(self, conformer_mol: str):
         """Convert openff molecule to appropriate format on which to assign charges
@@ -85,6 +101,13 @@ class ExternalChargeModel:
             Appropriate charge format to assign the partial charges 
         
         """
+
+    def molfile_to_dict(self, conformer_file_path: str):
+        """Convert json molfile to 
+        
+        """
+        mol_dictionary = json.loads(conformer_file_path)
+        return mol_dictionary
 
     def assign_charges(self, charge_format: any):
         """Assign charges according to charge model selected

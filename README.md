@@ -69,4 +69,3 @@ The whole ChargeAPI package can be installed by navigating to the local ChargeAP
 `pip install -e .`
 
 
-#TODO add installation instructions here

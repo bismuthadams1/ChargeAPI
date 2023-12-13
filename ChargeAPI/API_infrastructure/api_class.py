@@ -30,6 +30,8 @@ def handle_charge_request(charge_model: str, batched: bool = False) -> dict[str,
     #extract the data from the json
     conformer_mol = json_data['conformer_mol']
 
+    batched = json_data.get('batched', False)  # Defaults to False if not provided
+    
     if batched:
         batched = '--batched'
     else:

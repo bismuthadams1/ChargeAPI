@@ -22,5 +22,3 @@ def calculate_charge():
 
 if __name__ == "__main__":
     ...
-
-

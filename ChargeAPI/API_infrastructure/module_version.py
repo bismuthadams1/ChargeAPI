@@ -9,7 +9,7 @@ import logging
 from ChargeAPI.charge_models.eem_model import EEM_model
 import ChargeAPI
 
-logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
+#logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 def handle_charge_request(charge_model: str, conformer_mol: str, batched: bool = False) -> dict[str,any]:
     """
@@ -46,10 +46,9 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
         Result of the subprocess run command in/out/error info
     """
     charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
-    #logging.info(f'the charge result list is:{charge_result_list}')
     # Create JSON response
     json_response = {
-        'charge_result': charge_result_list,
+        'charge_result': charge_result_list.strip('\n\n'),
         'error': charge_result.stderr.decode()  # Include the error message if any
     }
     logging.info(json_response)

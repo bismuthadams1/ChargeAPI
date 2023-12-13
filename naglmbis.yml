@@ -1,0 +1,26 @@
+name: naglmbis
+channels:
+  - dglteam
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  - pytest
+  - pytest-cov
+  - pyarrow
+  - dgl[version='>=1']
+  - pytorch
+  - pytorch-lightning
+  - rich
+  - click
+  - click-option-group
+  - openff-toolkit-base
+  - qcengine[version='>=0.18.0']
+  - jinja2
+  - chemper
+  - torsiondrive
+  - openff-utilities
+  - pydantic[version='<2']
+  - ipykernel
+prefix: /Users/localadmin/mambaforge/envs/naglmbis

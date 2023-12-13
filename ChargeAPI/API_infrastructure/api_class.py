@@ -82,13 +82,11 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
         'error': charge_result.stderr.decode()  # Include the error message if any
     }
     # Return the charge result as a list and the JSON response   
-    #logging.info(f'assigne charges run with charges: {charges}')
      
     return jsonify(json_response)
 
 def main():
     #run the app
-    #app.run(debug=True,threaded=True)
     from waitress import serve
     serve(app, host="0.0.0.0", port=5000)
 

@@ -14,7 +14,7 @@ class MBIS_Model(ExternalChargeModel):
     def __init__(self, ftype="json"):
         super().__init__()
         self.file_type = ftype
-        self.charge_model = load_charge_model(charge_model="nagl-v1-mbis")
+        self.charge_model = load_charge_model(charge_model="nagl-v1-mbis-dipole")
 
     _name = "naglmbis"
 
@@ -39,14 +39,13 @@ class MBIS_Model(ExternalChargeModel):
         
         return super().__call__(conformer_mol = conformer_mol, batched = batched)
 
-
     def check_code_availability(self):
         """Check external code can be run
         """
 
         self.available = False
 
-        # Rudimentary check for openbabel conda environment
+        # Rudimentary check for nagl_mbis conda environment
         output = subprocess.run(["conda", "info", "--envs"], capture_output=True)
         for line in output.stdout.decode().split("\n"):
                 if line:
@@ -74,7 +73,6 @@ if __name__ == "__main__":
     parser.add_argument('--batched', help='Batch charges or not', action='store_true')
     parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
     parser.set_defaults(batched = False)
-
 
     args = parser.parse_args()
 

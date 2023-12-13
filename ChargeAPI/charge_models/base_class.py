@@ -42,7 +42,7 @@ class ExternalChargeModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_mol: str, file_method = False, batched = False) -> list[int] | None:
+    def __call__(self, conformer_mol: str, file_method = False, batched = False) -> list[int]  : #| None | str
         """Get charges for molecule.
 
         Parameters
@@ -88,7 +88,7 @@ class ExternalChargeModel:
                 mol_dictionary[mol[0]] = charges
             #write charges dictionary to file
             charge_file = "charges.json"
-            with open(charge_file,"w") as outfile:
+            with open(charge_file,"w+") as outfile:
                 json.dump(mol_dictionary, outfile, indent=2)
                 charge_file_path = os.path.abspath(charge_file)
             return charge_file_path
@@ -114,7 +114,9 @@ class ExternalChargeModel:
         """Convert json molfile to 
         
         """
-        mol_dictionary = json.loads(conformer_file_path)
+        with open(conformer_file_path, 'r') as conformer_file:
+            mol_dictionary = json.load(conformer_file)
+
         return mol_dictionary
 
     def assign_charges(self, charge_format: any):

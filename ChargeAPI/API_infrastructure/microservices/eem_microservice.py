@@ -5,6 +5,7 @@ app = Flask(__name__)
 
 eem_model = EEM_model()
 
+#TODO 
 
 @app.route('/calculate_charge', methods=['POST'])
 def calculate_charge():

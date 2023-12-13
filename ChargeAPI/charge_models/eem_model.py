@@ -9,7 +9,7 @@ import subprocess
 import numpy as np
 import logging
 
-logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
+#logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 class EEM_model(ExternalChargeModel):
 
@@ -95,12 +95,14 @@ class EEM_model(ExternalChargeModel):
 if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='EEM charge model arguments')
-    parser.add_argument('conformer', type=str, help='Conformer mol')
-    parser.add_argument('batched', type=bool, help='Batch charges or not')
-    args = parser.parse_args()
+    parser.add_argument('--conformer', type=str, help='Conformer mol')
+    parser.add_argument('--batched', help='Batch charges or not', action='store_true')
+    parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')    
+    parser.set_defaults(batched = False)
 
+    args = parser.parse_args()
     eem_model = EEM_model()
-    charges = eem_model(conformer_mol = args.conformer) 
+    charges = eem_model(conformer_mol = args.conformer, batched = args.batched) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~

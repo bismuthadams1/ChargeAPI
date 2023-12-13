@@ -22,8 +22,7 @@ json_result = ChargeAPI.API_infrastructure.module_version.handle_charge_request(
                                         batched=False)`
 A JSON dictionary is then produced with the result, which can be parsed to a list:
 
-`
->> {'charge_result': '[0.4071686863899231, -0.8143373727798462, 0.4071686863899231]', 'error': ''}
+`>> {'charge_result': '[0.4071686863899231, -0.8143373727798462, 0.4071686863899231]', 'error': ''}
 
 charges_module =  json.loads(charges['charge_result'])
 `
@@ -58,7 +57,15 @@ The HTTP version is still in partial and will be updated later.
 
 ## Installation
 
-The API works by running each charge model in its own environment. 
+The API works by running each charge model in its own environment. Current charge models are contained in the yml files naglmbis.yml and openbabel.yml. 
+Before the API can be used across the platform, it is essential that all the environments are accessible on the machine you are running on. 
+It is recommended that the openbabel environment is installed via the instructions here https://pypi.org/project/openbabel/. 
+
+The API environment is intended to be as lightweight as possible, and is the main environment which the charge models are processed.
+
+The whole ChargeAPI package can be installed by navigating to the local ChargeAPI directory and running:
+
+`pip install -e .`
 
 
 #TODO add installation instructions here

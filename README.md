@@ -15,45 +15,49 @@ can readily be converted to MolBlock strings via `rdkit.Chem.rdmolfiles.MolToMol
 
 The API accepts molecules one-by-one or as a batch. In non-batched mode, the python module is called via:
 
-`mol_block = '\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n   -0.7890   -0.1982   -0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0061    0.3917   -0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7951   -0.1936    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\nM  END\n'
+```
+mol_block = '\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n   -0.7890   -0.1982   -0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0061    0.3917   -0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7951   -0.1936    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\nM  END\n'
     
 json_result = ChargeAPI.API_infrastructure.module_version.handle_charge_request(charge_model = 'MBIS', 
-                                        conformer_mol = mol,
-                                        batched=False)`
+                                        conformer_mol = mol_block,
+                                        batched=False)
+```
 A JSON dictionary is then produced with the result, which can be parsed to a list:
 
-`>> {'charge_result': '[0.4071686863899231, -0.8143373727798462, 0.4071686863899231]', 'error': ''}
+```
+>> {'charge_result': '[0.4071686863899231, -0.8143373727798462, 0.4071686863899231]', 'error': ''}
 
 charges_module =  json.loads(charges['charge_result'])
-`
+```
 
 In batched-mode, again using the python module as an example, a path to a JSON containing all the MolBlocks you want to run. The keys in the JSON will correspond to the molecule names.
 To illustrate this, here is a general example of how to produce the JSON:
 
 ```       
-        mol_file = {}
-        for mol in molecules:
-            if mol.HasProp("_Name"):
-                mol_file[mol.GetProp("_Name")] = rdkit.Chem.rdmolfiles.MolToMolBlock(mol)
-            else:
-                mol_file[get_valid_id_name()] =  rdkit.Chem.rdmolfiles.MolToMolBlock(mol)
+mol_file = {}
+for mol in molecules:
+    if mol.HasProp("_Name"):
+        mol_file[mol.GetProp("_Name")] = rdkit.Chem.rdmolfiles.MolToMolBlock(mol)
+    else:
+        mol_file[get_valid_id_name()] =  rdkit.Chem.rdmolfiles.MolToMolBlock(mol)
 
-        file_name = "mols.json"
-        #write molblocks to json
-        with open(file_name,"w+") as outfile:
-            json.dump(mol_file, outfile, indent=2)
-            file_path = os.path.abspath(file_name)
+file_name = "mols.json"
+#write molblocks to json
+with open(file_name,"w+") as outfile:
+    json.dump(mol_file, outfile, indent=2)
+    file_path = os.path.abspath(file_name)
 ```
 We then supply the `file_path` as an argument to the module.
 
-`charge_file_path = ChargeAPI.API_infrastructure.module_version.handle_charge_request(charge_model = "MBIS",
+```
+charge_file_path = ChargeAPI.API_infrastructure.module_version.handle_charge_request(charge_model = "MBIS",
                                                         conformer_mol = file_path, 
                                                         batched = True)
-`
+```
 
 The output is then a JSON containing the charges in order of the atoms supplied in the MolBlock, with keys corresponding to the same names in the input.
 
-The HTTP version is still in partial and will be updated later. 
+The HTTP version is still in development and will be updated later. 
 
 ## Installation
 
@@ -68,4 +72,3 @@ The whole ChargeAPI package can be installed by navigating to the local ChargeAP
 `pip install -e .`
 
 
-#TODO add installation instructions here

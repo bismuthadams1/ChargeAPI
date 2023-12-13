@@ -30,7 +30,7 @@ charges_module =  json.loads(charges['charge_result'])
 In batched-mode, again using the python module as an example, a path to a JSON containing all the MolBlocks you want to run. The keys in the JSON will correspond to the molecule names.
 To illustrate this, here is a general example of how to produce the JSON:
 
-`       
+```       
         mol_file = {}
         for mol in molecules:
             if mol.HasProp("_Name"):
@@ -43,7 +43,7 @@ To illustrate this, here is a general example of how to produce the JSON:
         with open(file_name,"w+") as outfile:
             json.dump(mol_file, outfile, indent=2)
             file_path = os.path.abspath(file_name)
-`
+```
 We then supply the `file_path` as an argument to the module.
 
 `charge_file_path = ChargeAPI.API_infrastructure.module_version.handle_charge_request(charge_model = "MBIS",

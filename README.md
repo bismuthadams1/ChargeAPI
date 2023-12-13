@@ -30,8 +30,8 @@ charges_module =  json.loads(charges['charge_result'])
 In batched-mode, again using the python module as an example, a path to a JSON containing all the MolBlocks you want to run. The keys in the JSON will correspond to the molecule names.
 To illustrate this, here is a general example of how to produce the JSON:
 
-`        mol_file = {}
-
+`       
+        mol_file = {}
         for mol in molecules:
             if mol.HasProp("_Name"):
                 mol_file[mol.GetProp("_Name")] = rdkit.Chem.rdmolfiles.MolToMolBlock(mol)

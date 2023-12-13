@@ -19,7 +19,7 @@ The API accepts molecules one-by-one or as a batch. In non-batched mode, the pyt
 mol_block = '\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n   -0.7890   -0.1982   -0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0061    0.3917   -0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7951   -0.1936    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\nM  END\n'
     
 json_result = ChargeAPI.API_infrastructure.module_version.handle_charge_request(charge_model = 'MBIS', 
-                                        conformer_mol = mol,
+                                        conformer_mol = mol_block,
                                         batched=False)
 ```
 A JSON dictionary is then produced with the result, which can be parsed to a list:
@@ -34,18 +34,18 @@ In batched-mode, again using the python module as an example, a path to a JSON c
 To illustrate this, here is a general example of how to produce the JSON:
 
 ```       
-        mol_file = {}
-        for mol in molecules:
-            if mol.HasProp("_Name"):
-                mol_file[mol.GetProp("_Name")] = rdkit.Chem.rdmolfiles.MolToMolBlock(mol)
-            else:
-                mol_file[get_valid_id_name()] =  rdkit.Chem.rdmolfiles.MolToMolBlock(mol)
+mol_file = {}
+for mol in molecules:
+    if mol.HasProp("_Name"):
+        mol_file[mol.GetProp("_Name")] = rdkit.Chem.rdmolfiles.MolToMolBlock(mol)
+    else:
+        mol_file[get_valid_id_name()] =  rdkit.Chem.rdmolfiles.MolToMolBlock(mol)
 
-        file_name = "mols.json"
-        #write molblocks to json
-        with open(file_name,"w+") as outfile:
-            json.dump(mol_file, outfile, indent=2)
-            file_path = os.path.abspath(file_name)
+file_name = "mols.json"
+#write molblocks to json
+with open(file_name,"w+") as outfile:
+    json.dump(mol_file, outfile, indent=2)
+    file_path = os.path.abspath(file_name)
 ```
 We then supply the `file_path` as an argument to the module.
 

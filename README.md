@@ -54,7 +54,7 @@ We then supply the `file_path` as an argument to the module.
 
 The output is then a JSON containing the charges in order of the atoms supplied in the MolBlock, with keys corresponding to the same names in the input.
 
-The HTTP version is still in partial and will be updated later. 
+The HTTP version is still in development and will be updated later. 
 
 ## Installation
 

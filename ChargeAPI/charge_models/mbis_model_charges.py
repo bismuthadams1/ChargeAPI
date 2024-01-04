@@ -12,11 +12,11 @@ import argparse
 
 class MBIS_Model(ExternalChargeModel):
 
-    _name = "naglmbis"
+    _name = "naglmbis_charge"
     def __init__(self, ftype="json"):
         super().__init__()
         self.file_type = ftype
-        self.charge_model = load_charge_model(charge_model="nagl-v1-mbis-dipole")
+        self.charge_model = load_charge_model(charge_model="nagl-v1-mbis")
 
     def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int] | None:
         """Get charges for molecule.

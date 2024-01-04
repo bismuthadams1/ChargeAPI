@@ -20,6 +20,10 @@ def calculate_charge():
     # Return the calculated charges or result
     return jsonify({'charge_result': charges})
 
+def main(ip):
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=ip+1)
+
 
 if __name__ == "__main__":
-    ...
+    main()

@@ -8,16 +8,18 @@ import argparse
 import subprocess
 import numpy as np
 import logging
+#from ChargeAPI.charge_models import EXT_CHARGE_MODELS
+
 
 #logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
 class EEM_model(ExternalChargeModel):
-
+     
+    _name = "eem2015dn"
     def __init__(self, ftype="json"):
         super().__init__()
         self.file_type = ftype
 
-    _name = "eem2015dn"
     def check_code_availability(self):
         """Check external code can be run
         """

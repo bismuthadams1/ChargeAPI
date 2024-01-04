@@ -6,7 +6,7 @@ import numpy as np
 import os
 import logging
 
-from ChargeAPI.charge_models.eem_model import EEM_model
+#from ChargeAPI.charge_models.eem_model import EEM_model
 import ChargeAPI
 
 #logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
@@ -29,6 +29,13 @@ def handle_charge_request(charge_model: str, conformer_mol: str, batched: bool =
             return prepare_json_outs(charge_result)
     elif charge_model == 'MBIS':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model.py'
+            cmd = (
+                f"conda run -n naglmbis python {script_path} --conformer '{conformer_mol}'  {batched}"
+            )
+            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            return prepare_json_outs(charge_result)
+    elif charge_model == 'MBIS_CHARGE':
+            script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model_charges.py'
             cmd = (
                 f"conda run -n naglmbis python {script_path} --conformer '{conformer_mol}'  {batched}"
             )

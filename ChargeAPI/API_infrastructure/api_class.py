@@ -40,6 +40,8 @@ def handle_charge_request(charge_model: str, batched: bool = False) -> dict[str,
     match charge_model:
             case 'EEM':
                 script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/eem_model.py'
+                #replace with requests json_charges = requests.post('http://127.0.0.1:5001/charge/EEM', json = json_data)
+
                 cmd = (
                     f"conda run -n openbabel python {script_path} --conformer '{conformer_mol}' {batched}"
                 )
@@ -90,7 +92,11 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
 def main():
     #run the app
     from waitress import serve
-    serve(app, host="0.0.0.0", port=5000)
+    from microservices import eem_microservice, mbis_microservice
+    ip = 5000
+    serve(app, host="0.0.0.0", port=ip)
+    eem_microservice.main(ip)
+   # mbis_microservice.main(ip)
 
 
 if __name__ == '__main__':

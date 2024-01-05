@@ -87,7 +87,7 @@ class ExternalChargeModel:
                 charges = self.assign_charges(charge_format)
                 mol_dictionary[mol[0]] = charges
             #write charges dictionary to file
-            charge_file = "charges.json"
+            charge_file = f"{conformer_mol}_charges.json"
             with open(charge_file,"w+") as outfile:
                 json.dump(mol_dictionary, outfile, indent=2)
                 charge_file_path = os.path.abspath(charge_file)

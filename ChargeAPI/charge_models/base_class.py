@@ -90,8 +90,8 @@ class ExternalChargeModel:
             charge_file = f"{conformer_mol}_charges.json"
             with open(charge_file,"w+") as outfile:
                 json.dump(mol_dictionary, outfile, indent=2)
-                charge_file_path = os.path.abspath(charge_file)
-            return charge_file_path
+                #charge_file_path = os.path.abspath(charge_file)
+            return charge_file
 
 
 

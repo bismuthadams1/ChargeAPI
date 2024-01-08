@@ -1,69 +1,60 @@
 """
 Requires Nagl MBIS model environment : https://github.com/jthorton/nagl-mbis
 """
+import os
+# Check if the module is imported for environment checking
+if os.environ.get("IMPORT_CHECK") == "1":
+    ENV_NAME = "naglmbis"  # Only define the environment name
+    # Stop further execution of the module
+    MODULE = "MBIS_Model"
+else:
+    #used for execution
+    from naglmbis.models import load_charge_model
+    from base_class import ExternalChargeModel
+    from openff.toolkit.topology import Molecule
+    import rdkit
+    import subprocess
+    import argparse
 
-from naglmbis.models import load_charge_model
-from base_class import ExternalChargeModel
-from openff.toolkit.topology import Molecule
-import rdkit
-import subprocess
-import argparse
+    class MBIS_Model(ExternalChargeModel):
 
+        _name = "naglmbis"
+        def __init__(self, ftype="json"):
+            super().__init__()
+            self.file_type = ftype
+            self.charge_model = load_charge_model(charge_model="nagl-v1-mbis-dipole")
 
-class MBIS_Model(ExternalChargeModel):
+        def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int] | None:
+            """Get charges for molecule.
 
-    _name = "naglmbis"
-    def __init__(self, ftype="json"):
-        super().__init__()
-        self.file_type = ftype
-        self.charge_model = load_charge_model(charge_model="nagl-v1-mbis-dipole")
+            Parameters
+            ----------
+            mapped_smiles: mapped smiles 
+                Molecule to run charge calculation on
+            conformer_mol: str
+                conformer in mol format
+            file_type: str
+                Type of file to output charges to [default = json]
+            file_method: bool
+                Some charge models require temporary files to be written and read, others use python objects stored in internal memory
+            Returns
+            -------
+            charge_files: List of str
+                list containing charges for the molecule or filepath to charges for each conformer
+            """
+            
+            return super().__call__(conformer_mol = conformer_mol, batched = batched)
 
-    def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int] | None:
-        """Get charges for molecule.
+        def convert_to_charge_format(self, conformer_mol: str):
 
-        Parameters
-        ----------
-        mapped_smiles: mapped smiles 
-            Molecule to run charge calculation on
-        conformer_mol: str
-            conformer in mol format
-        file_type: str
-            Type of file to output charges to [default = json]
-        file_method: bool
-            Some charge models require temporary files to be written and read, others use python objects stored in internal memory
-        Returns
-        -------
-        charge_files: List of str
-            list containing charges for the molecule or filepath to charges for each conformer
-        """
+            rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
+            return rdkit_conformer
         
-        return super().__call__(conformer_mol = conformer_mol, batched = batched)
+        def assign_charges(self, rdkit_conformer: Molecule):
 
-    def check_code_availability(self):
-        """Check external code can be run
-        """
-
-        self.available = False
-
-        # Rudimentary check for nagl_mbis conda environment
-        output = subprocess.run(["conda", "info", "--envs"], capture_output=True)
-        for line in output.stdout.decode().split("\n"):
-                if line:
-                    if line.split()[0] == "naglmbis":
-                        self.available = True
-
-        return self.available
-
-    def convert_to_charge_format(self, conformer_mol: str):
-
-        rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
-        return rdkit_conformer
-    
-    def assign_charges(self, rdkit_conformer: Molecule):
-
-        charges = self.charge_model.compute_properties(rdkit_conformer)["mbis-charges"]
-        charges = charges.flatten().tolist()
-        return charges
+            charges = self.charge_model.compute_properties(rdkit_conformer)["mbis-charges"]
+            charges = charges.flatten().tolist()
+            return charges
 
 
 if __name__ == "__main__":

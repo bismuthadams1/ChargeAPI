@@ -6,7 +6,6 @@ import logging
 import numpy as np
 import tempfile
 
-
 from rdkit import Chem
 #from openff.toolkit.topology import Molecule
 #from openff.units import unit
@@ -17,11 +16,12 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.ERROR)
 #logging.basicConfig(filename='charge_api.log', level=logging.DEBUG)
 
-EXT_CHARGE_MODELS = {}
+# EXT_CHARGE_MODELS = {}
 
 class ExternalChargeModel:
     """Base class for external charge models
     """
+    subclasses = {}
 
     _name = None
     def __init_subclass__(cls, *args, **kwargs):
@@ -30,9 +30,11 @@ class ExternalChargeModel:
         from this base class) and add them to the dict of external charge models.
         """
         super().__init_subclass__(**kwargs)
-        if cls._name is not None:
-            # Register new external charge model
-            EXT_CHARGE_MODELS[cls._name] = cls
+        # if cls._name is not None:
+        #     # Register new external charge model
+        #     EXT_CHARGE_MODELS[cls._name] = cls
+        print(f'class is {cls}')
+        cls.subclasses[cls._name] = cls
 
     def __init__(self):
         """Initialise External charge model"""

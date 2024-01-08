@@ -30,10 +30,6 @@ class ExternalChargeModel:
         from this base class) and add them to the dict of external charge models.
         """
         super().__init_subclass__(**kwargs)
-        # if cls._name is not None:
-        #     # Register new external charge model
-        #     EXT_CHARGE_MODELS[cls._name] = cls
-        print(f'class is {cls}')
         cls.subclasses[cls._name] = cls
 
     def __init__(self):

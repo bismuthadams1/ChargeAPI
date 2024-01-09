@@ -13,7 +13,8 @@ import ChargeAPI
 
 def handle_charge_request(charge_model: str, conformer_mol: str, batched: bool = False) -> dict[str,any]:
     """
-    handle the charge request and run the correct charge model
+    handle the charge request and run the correct charge model. Batched option accepts a JSON of molecule names and their
+    corresponding forms in molblocks. 
     """
     if batched:
         batched = '--batched'

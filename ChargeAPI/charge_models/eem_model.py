@@ -13,9 +13,7 @@ else:
     from openbabel import openbabel as ob
     from openbabel import pybel
     import argparse
-    import subprocess
     import numpy as np
-    import logging
 
     class EEM_model(ExternalChargeModel):
         

@@ -50,8 +50,9 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
         Result of the subprocess run command in/out/error info
     """
     charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
+    print(f'charge result: {charge_result}')
     # Create JSON response
-    print(charge_result_list)
+    print(charge_result)
     json_response = {
         'charge_result': charge_result_list.strip('\n\n'),
         'error': charge_result.stderr.decode()  # Include the error message if any

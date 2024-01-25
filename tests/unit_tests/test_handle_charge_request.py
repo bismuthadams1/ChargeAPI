@@ -48,3 +48,28 @@ class TestHandleChargeRequest:
         
         assert charge_request == expected_response
     
+    #this replaces the subprocess call
+    @patch('ChargeAPI.API_infrastructure.module_version.subprocess.run')
+    def test_handle_charge_request_with_MBIS_CHARGE(self, mock_run):
+
+        mock_stdout = MagicMock()
+
+        mock_stdout.configure_mock(
+            **{"stdout":b"[0.4147946834564209, -0.8295893669128418, 0.4147946834564209]\n\n",
+               "stderr":b""
+            }
+        )
+        mock_run.return_value = mock_stdout
+        charge_model = 'MBIS_CHARGE'
+        conformer_mol = self.mol
+        expected_response = {'charge_result':'[0.4147946834564209, -0.8295893669128418, 0.4147946834564209]','error':''}
+        charge_request = handle_charge_request(charge_model = charge_model, conformer_mol = conformer_mol, batched = False)
+        
+        assert charge_request == expected_response
+
+    def test_incorrect_flag(self):
+        charge_model = 'INVALID MODEL'  #incorrect flag
+        conformer_mol = self.mol
+        with pytest.raises(NameError):
+            handle_charge_request(charge_model = charge_model, conformer_mol = conformer_mol, batched = False)
+            

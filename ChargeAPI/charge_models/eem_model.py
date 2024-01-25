@@ -9,7 +9,7 @@ if os.environ.get("IMPORT_CHECK") == "1":
     MODULE = "EEM_model"
 else:
     #used for execution
-    from ChargeAPI.charge_models.base_class import ExternalChargeModel
+    from base_class import ExternalChargeModel #ChargeAPI.charge_models.
     from openbabel import openbabel as ob
     from openbabel import pybel
     import argparse

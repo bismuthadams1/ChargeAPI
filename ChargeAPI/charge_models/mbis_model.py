@@ -10,7 +10,7 @@ if os.environ.get("IMPORT_CHECK") == "1":
 else:
     #used for execution
     from naglmbis.models import load_charge_model
-    from base_class import ExternalChargeModel
+    from base_class  import ExternalChargeModel
     from openff.toolkit.topology import Molecule
     import rdkit
     import subprocess

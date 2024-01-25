@@ -68,6 +68,7 @@ Before the API can be used across the platform, it is essential that all the env
 
 It is recommended that the openbabel environment is installed via the instructions here https://pypi.org/project/openbabel/. The environment.yml file here will be platform specific. It is essential this environment is called `openbabel` otherwise the API will not be able to find the charge models associated with Open Babel. 
 
+
 ### Nagl_mbis
 
 First, install the naglmbis environment in the naglmbis.yml file. Then clone the nagl-mbis repo https://github.com/jthorton/nagl-mbis/tree/main, and follow the install instructions on the README. It is essential this environment is called `naglmbis` otherwise the API will not be able to find the charge models associated with Nagl_mbis. 
@@ -79,4 +80,14 @@ The whole ChargeAPI package can be installed by navigating to the local ChargeAP
 `pip install -e .`
 
 Tests can be run by installing the ChargeAPI package and running in the API_env, also provided in the API_env.yml file. 
+
+## Available Models
+
+The available charges are:
+
+| Model    |      Flag     | 
+|----------|:-------------:|
+| EEM2015bn|  EEM          |  
+| Nagl_mbis_dipoles|  MBIS          |  
+| Nagl_mbis_charge|  MBIS_CHARGE          |  
 

@@ -20,7 +20,7 @@ def handle_charge_request(charge_model: str, conformer_mol: str, batched: bool =
     if charge_model == 'EEM':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/eem_model.py'
             cmd = (
-                f"conda run -n openbabel python {script_path} --conformer '{conformer_mol}' {batched}"
+                f"conda run -n base python {script_path} --conformer '{conformer_mol}' {batched}"
             )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             return prepare_json_outs(charge_result)

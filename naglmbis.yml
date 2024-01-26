@@ -1,33 +1,23 @@
 name: naglmbis
 channels:
   - conda-forge
-
 dependencies:
   - python
   - pip
-
-  # testing
   - pytest
   - pytest-cov
-
-  # core deps
-#  - nagl >=0.0.9
   - pyarrow
-  - dgl >=1
+  - dgl[version='>=1']
   - pytorch
   - pytorch-lightning
   - rich
   - click
   - click-option-group
   - openff-toolkit-base
-  - qcengine >=0.18.0
+  - qcengine[version='>=0.18.0']
   - jinja2
   - chemper
   - torsiondrive
-  # - qubekit
   - openff-utilities
-  - pydantic <2
-  - pip:
-      - git+https://github.com/SimonBoothroyd/nagl.git@main
-      - espaloma_charge
-      - git+https://github.com/qubekit/QUBEKit.git@main
+  - pydantic[version='<2']
+prefix: /home/vboxuser/miniforge3/envs/naglmbis

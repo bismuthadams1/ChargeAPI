@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import json
 import os
 
+#https://stackoverflow.com/questions/56046524/check-if-python-dictionaries-are-equal-allowing-small-difference-for-floats
 def nested_approx(expected, rel=None, abs=None, nan_ok=False):
     if isinstance(expected, Mapping):
         return ApproxNestedMapping(expected, rel, abs, nan_ok)

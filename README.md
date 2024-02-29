@@ -85,9 +85,9 @@ Tests can be run by installing the ChargeAPI package and running in the API_env,
 
 The available charges are:
 
-| Model    |      Flag     | 
-|----------|:-------------:|
-| EEM2015bn|  EEM          |  
-| Nagl_mbis_dipoles|  MBIS          |  
-| Nagl_mbis_charge|  MBIS_CHARGE          |  
+| Model    |      Flag     |      Environment  |
+|----------|:-------------:|:------------------|
+| EEM2015bn|  EEM          |  openbabel
+| Nagl_mbis_dipoles|  MBIS          |    naglmbis     |
+| Nagl_mbis_charge|  MBIS_CHARGE          |    naglmbis    |
 

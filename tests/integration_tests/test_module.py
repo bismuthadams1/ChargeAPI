@@ -45,14 +45,14 @@ class TestSingle:
         json_result = module_version.handle_charge_request(charge_model = 'MBIS', 
                                                            conformer_mol = self.mol,
                                                            batched=False)
-        assert json.loads(json_result['charge_result']) == approx(expected_charges)
+        assert json.loads(json_result['charge_result']) == expected_charges #approx
 
     def test_mbis_charges(self):    
         expected_charges = [0.4147946834564209, -0.8295893669128418, 0.4147946834564209]
         json_result = module_version.handle_charge_request(charge_model = 'MBIS_CHARGE', 
                                                             conformer_mol = self.mol,
                                                             batched=False)
-        assert json.loads(json_result['charge_result']) == approx(expected_charges)
+        assert json.loads(json_result['charge_result']) == expected_charges #approx(
 
 class TestBatched:
     mol_file_path = os.path.abspath('./tests/data/mol_file.mol')

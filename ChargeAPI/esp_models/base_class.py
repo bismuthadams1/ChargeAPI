@@ -65,6 +65,7 @@ class ExternalESPModel:
             logging.info('not batched option chosen')
 
             charge_format = self.convert_to_charge_format(conformer_mol)
+            grid = self.build_grid(conformer_mol)
             #if the charge model requires generation and reading of files to produce charges
             if file_method:
                 file_path = self.generate_temp_files(charge_format)
@@ -72,8 +73,8 @@ class ExternalESPModel:
                 charges = self.read_charge_output(charge_file_path)
             #other charge model types will produce charges based on python objects in internal memory
             else:
-                charges = self.assign_esp(charge_format)
-            return charges
+                values, esp_grid = self.assign_esp(charge_format, grid)
+            return values, esp_grid
 
         else:
             logging.info(' batched option chosen')
@@ -82,15 +83,15 @@ class ExternalESPModel:
             mol_dictionary = self.molfile_to_dict(conformer_mol)
             for mol in mol_dictionary.items():
                 charge_format = self.convert_to_charge_format(mol[1])
-                grid = self.build_grid(charge_format)
+                grid = self.build_grid(mol)
                 values, esp_grid = self.assign_esp(charge_format, grid)
                 mol_dictionary[mol[0]] = values, esp_grid
             #write charges dictionary to file
-            charge_file = f"{conformer_mol.strip('.json')}_charges.json"
-            with open(charge_file,"w+") as outfile:
+            esp_file = f"{conformer_mol.strip('.json')}_charges.json"
+            with open(esp_file,"w+") as outfile:
                 json.dump(mol_dictionary, outfile, indent=3)
                 #charge_file_path = os.path.abspath(charge_file)
-            return charge_file
+            return esp_file
 
 
 

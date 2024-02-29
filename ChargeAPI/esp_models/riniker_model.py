@@ -13,7 +13,7 @@ if os.environ.get("IMPORT_CHECK") == "1":
 else:
     #used for execution
     from base_class import ExternalESPModel #ChargeAPI
-    from riniker.MultipoleNet import load_model, build_graph_batched, D_Q
+    from MultipoleNet import load_model, build_graph_batched, D_Q
     # from openbabel import openbabel as ob
     # from openbabel import pybel
     from openff.units import unit
@@ -60,7 +60,7 @@ else:
 
             Parameters
             ----------
-            conoformer_mol: string
+            conformer_mol: string
                 File path to the mol to convert to appropriate format
             
             Returns
@@ -78,7 +78,9 @@ else:
         def build_grid(self, conformer_mol: str) -> ndarray:
             """Builds the grid on which to assign the esp
 
-            
+            Parameters
+            ----------
+            co
             
             """
 
@@ -92,7 +94,7 @@ else:
 
             return grid
         
-        def assign_esp(self, coordinates: np.ndarray, elements: list[str], grid: unit.Quantity) -> list[float,float]:
+        def assign_esp(self, coordinates_elements: tuple[np.ndarray,str], grid: unit.Quantity) -> list[float,float]:
             """Assign charges according to charge model selected
 
             Parameters
@@ -104,18 +106,24 @@ else:
             -------
             partial_charges: list of partial charges 
             """
+            (coordinates, elements) = coordinates_elements
             monopoles, dipoles, quadrupoles = self.esp_model.predict(coordinates, elements)
+            #multipoles with correct units
+            monopoles_quantity = monopoles.numpy()*unit.e
+            dipoles_quantity = dipoles.numpy()*unit.e*unit.angstrom
+            quadropoles_quantity = quadrupoles.numpy()*unit.e*unit.angstrom*unit.angstrom
+            coordinates_ang = coordinates * unit.angstrom
             monopole_esp = self.calculate_esp_monopole_au(grid_coordinates=grid,
-                                                atom_coordinates=coordinates,
-                                                charges = monopoles)
+                                                atom_coordinates=coordinates_ang,
+                                                charges = monopoles_quantity)
             dipole_esp = self.calculate_esp_dipole_au(grid_coordinates=grid,
-                                            atom_coordinates=coordinates,
-                                            dipoles= dipoles)
+                                            atom_coordinates=coordinates_ang,
+                                            dipoles= dipoles_quantity)
             quadrupole_esp = self.calculate_esp_quadropole_au(grid_coordinates=grid,
-                                            atom_coordinates=coordinates,
-                                            quadrupoles= quadrupoles)
+                                            atom_coordinates=coordinates_ang,
+                                            quadrupoles= quadropoles_quantity)
             
-            return (monopole_esp + dipole_esp + quadrupole_esp)
+            return (monopole_esp + dipole_esp + quadrupole_esp), grid
     
         def calculate_esp_monopole_au(self,
             grid_coordinates: unit.Quantity,  # N x 3
@@ -156,11 +164,11 @@ else:
             
             return esp.to(self.AU_ESP)
 
-        def calculate_esp_dipole_au(
-        grid_coordinates: unit.Quantity,  # N , 3
-        atom_coordinates: unit.Quantity,  # M , 3
-        dipoles: unit.Quantity,  # M , 3       
-        ) -> unit.Quantity:
+        def calculate_esp_dipole_au(self,
+            grid_coordinates: unit.Quantity,  # N , 3
+            atom_coordinates: unit.Quantity,  # M , 3
+            dipoles: unit.Quantity,  # M , 3       
+            ) -> unit.Quantity:
             """Generate the esp from the on atom dipoles
             
             Parameters
@@ -198,7 +206,7 @@ else:
 
             return esp.to(self.AU_ESP)
 
-        def calculate_esp_quadropole_au(
+        def calculate_esp_quadropole_au(self,
             grid_coordinates: unit.Quantity,  # N x 3
             atom_coordinates: unit.Quantity,  # M x 3
             quadrupoles: unit.Quantity,  # M N 
@@ -246,12 +254,15 @@ if __name__ == "__main__":
     parser.add_argument('--batched', help='Batch charges or not', action='store_true')
     parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')    
     parser.set_defaults(batched = False)
-
+    # mol = '\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n   -0.7890   -0.1982   -0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0061    0.3917   -0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7951   -0.1936    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\nM  END\n'
     args = parser.parse_args()
-    eem_model = RIN_model()
-    charges = eem_model(conformer_mol = args.conformer, batched = args.batched) 
+    rin_model = RIN_model()
+    #Esp currently in hartree/energy and grid in angstrom. 
+    values, esp_grid = rin_model(conformer_mol = args.conformer, batched = args.batched) 
+    # values, esp_grid = rin_model(conformer_mol = mol, batched = False) 
+
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
-    print(charges)
+    print(values, 'OO', esp_grid)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
 
 

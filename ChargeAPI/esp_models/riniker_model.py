@@ -122,8 +122,8 @@ else:
             quadrupole_esp = self.calculate_esp_quadropole_au(grid_coordinates=grid,
                                             atom_coordinates=coordinates_ang,
                                             quadrupoles= quadropoles_quantity)
-            
-            return (monopole_esp + dipole_esp + quadrupole_esp), grid
+            #NOTE: ESP units, hartree/e and grid units are angstrom
+            return (monopole_esp + dipole_esp + quadrupole_esp).m.flatten().tolist(), grid.m.tolist()
     
         def calculate_esp_monopole_au(self,
             grid_coordinates: unit.Quantity,  # N x 3
@@ -251,19 +251,19 @@ if __name__ == "__main__":
     # Define argparse setup for command line execution
     parser = argparse.ArgumentParser(description='RIN charge model arguments')
     parser.add_argument('--conformer', type=str, help='Conformer mol')
-    parser.add_argument('--batched', help='Batch charges or not', action='store_true')
+    parser.add_argument('--batched', help='Batch charges or not', dest='batched', action='store_true')
     parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')    
     parser.set_defaults(batched = False)
-    # mol = '\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n   -0.7890   -0.1982   -0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0061    0.3917   -0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7951   -0.1936    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\nM  END\n'
+   
     args = parser.parse_args()
     rin_model = RIN_model()
     #Esp currently in hartree/energy and grid in angstrom. 
-    values, esp_grid = rin_model(conformer_mol = args.conformer, batched = args.batched) 
-    # values, esp_grid = rin_model(conformer_mol = mol, batched = False) 
-
-    #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
-    print(values, 'OO', esp_grid)
-    #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
+    if not args.batched:
+        values, esp_grid = rin_model(conformer_mol = args.conformer, batched = args.batched) 
+        print(values, 'OO', esp_grid)
+    else:
+        file_path = rin_model(conformer_mol = args.conformer, batched = args.batched) 
+        print(file_path)
 
 
 

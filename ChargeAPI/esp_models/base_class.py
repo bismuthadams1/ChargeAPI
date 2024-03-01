@@ -83,13 +83,16 @@ class ExternalESPModel:
             mol_dictionary = self.molfile_to_dict(conformer_mol)
             for mol in mol_dictionary.items():
                 charge_format = self.convert_to_charge_format(mol[1])
-                grid = self.build_grid(mol)
+                grid = self.build_grid(mol[1])
                 values, esp_grid = self.assign_esp(charge_format, grid)
-                mol_dictionary[mol[0]] = values, esp_grid
+                esp_result = dict()
+                esp_result['esp_values'] = values
+                esp_result['esp_grid'] = esp_grid
+                mol_dictionary[mol[0]] = esp_result
             #write charges dictionary to file
-            esp_file = f"{conformer_mol.strip('.json')}_charges.json"
+            esp_file = f"{conformer_mol.strip('.json')}_esp.json"
             with open(esp_file,"w+") as outfile:
-                json.dump(mol_dictionary, outfile, indent=3)
+                json.dump(mol_dictionary, outfile, indent=2)
                 #charge_file_path = os.path.abspath(charge_file)
             return esp_file
 

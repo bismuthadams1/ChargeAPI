@@ -13,21 +13,21 @@ def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = Fa
     corresponding forms in molblocks. 
     """
     if batched:
-        batched = '--batched'
+        batched_option = '--batched'
     else:
-        batched = '--not_batched'
+        batched_option = '--not_batched'
 
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (
-                f"conda run -n rinnicker python {script_path} --conformer '{conformer_mol}' {batched}"
+                f"conda run -n rinnicker python {script_path} --conformer '{conformer_mol}' {batched_option}"
             )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            return prepare_json_outs(charge_result)
+            return prepare_json_outs(charge_result, batched=batched)
     else:
             raise NameError
 
-def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
+def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool = False) -> json:
     """
     grabs data from subprocess and produces a json of the output
     Paramters
@@ -37,13 +37,23 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
     """
 
     complete_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
-    (esp, grid) = complete_result_list.split('OO')
-    # Create JSON response
-    json_response = {
-        'esp_result': esp.strip('\n\n'),
-        'grid':grid.strip('\n\n'),
-        'error': charge_result.stderr.decode()  # Include the error message if any
-    }
+    print(complete_result_list)
+
+    if not batched:
+        (esp, grid) = complete_result_list.split('OO')
+        # Create JSON response
+        json_response = {
+            'esp_result': esp.strip('\n\n'),
+            'grid':grid.strip('\n\n'),
+            'error': charge_result.stderr.decode()  # Include the error message if any
+        }
+    else:
+        path_to_result = complete_result_list
+        # Create JSON response
+        json_response = {
+            'file_path': path_to_result.strip('\n\n'),
+            'error': charge_result.stderr.decode()  # Include the error message if any
+        }
     logging.info(json_response)
     # Return the charge result as a list and the JSON response        
     return json_response

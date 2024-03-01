@@ -14,8 +14,6 @@ else:
     #used for execution
     from base_class import ExternalESPModel #ChargeAPI
     from MultipoleNet import load_model, build_graph_batched, D_Q
-    # from openbabel import openbabel as ob
-    # from openbabel import pybel
     from openff.units import unit
     import argparse
     import rdkit
@@ -87,10 +85,10 @@ else:
             rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
             openff_mol = Molecule.from_rdkit(rdkit_conformer)
             grid_settings = MSKGridSettings(
-                    type="msk", density=1.0
+                    type="msk", density=2.0
                 )
             grid = GridGenerator.generate(openff_mol, openff_mol.conformers[0], grid_settings)
-            grid = grid.to(unit.angstrom)
+            # grid = grid.to(unit.angstrom)
 
             return grid
         

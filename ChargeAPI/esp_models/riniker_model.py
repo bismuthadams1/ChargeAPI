@@ -83,7 +83,7 @@ else:
             """
 
             rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
-            openff_mol = Molecule.from_rdkit(rdkit_conformer)
+            openff_mol = Molecule.from_rdkit(rdkit_conformer, allow_undefined_stereo=True)
             grid_settings = MSKGridSettings(
                     type="msk", density=2.0
                 )

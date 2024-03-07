@@ -24,7 +24,7 @@ else:
 
     class RIN_model(ExternalESPModel):
         
-        _name = "rinnicker"
+        _name = "rinker"
         def __init__(self, ftype="json"):
             super().__init__()
             self.file_type = ftype

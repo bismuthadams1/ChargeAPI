@@ -73,6 +73,11 @@ It is recommended that the openbabel environment is installed via the instructio
 
 First, install the naglmbis environment in the naglmbis.yml file. Then clone the nagl-mbis repo https://github.com/jthorton/nagl-mbis/tree/main, and follow the install instructions on the README. It is essential this environment is called `naglmbis` otherwise the API will not be able to find the charge models associated with Nagl_mbis. 
 
+### Rinnicker
+
+The Riniker model predicts multipoles of non-charges species. A private installable forked version has been created for 
+
+
 ### ChargeAPI
 
 The whole ChargeAPI package can be installed by navigating to the local ChargeAPI directory and running:

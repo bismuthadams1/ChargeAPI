@@ -20,7 +20,7 @@ def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = Fa
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (
-                f"conda run -n rinnicker python {script_path} --conformer '{conformer_mol}' {batched_option}"
+                f"conda run -n riniker python {script_path} --conformer '{conformer_mol}' {batched_option}"
             )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             return prepare_json_outs(charge_result, batched=batched)

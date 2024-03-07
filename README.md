@@ -73,10 +73,9 @@ It is recommended that the openbabel environment is installed via the instructio
 
 First, install the naglmbis environment in the naglmbis.yml file. Then clone the nagl-mbis repo https://github.com/jthorton/nagl-mbis/tree/main, and follow the install instructions on the README. It is essential this environment is called `naglmbis` otherwise the API will not be able to find the charge models associated with Nagl_mbis. 
 
-### Rinnicker
+### Riniker
 
-The Riniker model predicts multipoles of non-charges species. A private installable forked version has been created for 
-
+The intallation instructions for the riniker model can be found at this forked version of riniker which is installable via the setup.py https://github.com/kuano-ai/Forked_Riniker. 
 
 ### ChargeAPI
 
@@ -90,9 +89,10 @@ Tests can be run by installing the ChargeAPI package and running in the API_env,
 
 The available charges are:
 
-| Model    |      Flag     |      Environment  |
-|----------|:-------------:|:------------------|
-| EEM2015bn|  EEM          |  openbabel
-| Nagl_mbis_dipoles|  MBIS          |    naglmbis     |
-| Nagl_mbis_charge|  MBIS_CHARGE          |    naglmbis    |
+| Model    | Model Type|      Flag     |      Environment  |
+|----------|:------:|:-------------:|:------------------|
+| EEM2015bn|on-atom charges|  EEM          |  openbabel
+| Nagl_mbis_dipoles|on-atom charge|  MBIS          |    naglmbis     |
+| Nagl_mbis_charge|on-atom charge|  MBIS_CHARGE          |    naglmbis    |
+| EQDNN|ESP|  RIN          |    riniker    |
 

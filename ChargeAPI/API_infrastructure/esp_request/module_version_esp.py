@@ -7,7 +7,7 @@ import os
 import logging
 import ChargeAPI
 
-def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = False) -> dict[str,any]:
+def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = False, broken_up: bool = False) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model. Batched option accepts a JSON of molecule names and their
     corresponding forms in molblocks. 
@@ -17,17 +17,23 @@ def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = Fa
     else:
         batched_option = '--not_batched'
 
+    if broken_up:
+        broken_up_option = '--broken_up'
+        batched_option = '--not_batched'
+    else:
+        broken_up_option = '--not_broken_up'
+
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (
-                f"conda run -n riniker python {script_path} --conformer '{conformer_mol}' {batched_option}"
+                f"conda run -n riniker python {script_path} --conformer '{conformer_mol}' {batched_option} {broken_up_option}"
             )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            return prepare_json_outs(charge_result, batched=batched)
+            return prepare_json_outs(charge_result, batched=batched, broken_up=broken_up)
     else:
             raise NameError
 
-def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool = False) -> json:
+def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool = False, broken_up: bool = False) -> json:
     """
     grabs data from subprocess and produces a json of the output
     Paramters
@@ -40,13 +46,23 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool 
     print(complete_result_list)
 
     if not batched:
-        (esp, grid) = complete_result_list.split('OO')
-        # Create JSON response
-        json_response = {
-            'esp_result': esp.strip('\n\n'),
-            'grid':grid.strip('\n\n'),
-            'error': charge_result.stderr.decode()  # Include the error message if any
-        }
+        if not broken_up:
+            (esp, grid) = complete_result_list.split('OO')
+            # Create JSON response
+            json_response = {
+                'esp_result': esp.strip('\n\n'),
+                'grid':grid.strip('\n\n'),
+                'error': charge_result.stderr.decode()  # Include the error message if any
+            }
+        else:             
+            (monopole, dipole, quadropole) = complete_result_list.split('OO')
+            # Create JSON response
+            json_response = {
+                'monopole': monopole.strip('\n\n'),
+                'dipole':dipole.strip('\n\n'),
+                'quadropole':quadropole.strip('\n\n'),
+                'error': charge_result.stderr.decode()  # Include the error message if any
+            }
     else:
         path_to_result = complete_result_list
         # Create JSON response

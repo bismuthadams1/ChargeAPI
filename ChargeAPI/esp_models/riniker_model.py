@@ -32,7 +32,7 @@ else:
             self.esp_model = load_model()
             self.AU_ESP = unit.atomic_unit_of_energy / unit.elementary_charge
 
-        def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int]:
+        def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False, broken_up = False) -> list[int]:
             """Get charges for molecule.
 
             Parameters
@@ -51,7 +51,15 @@ else:
                 Files containing charges for each molecule
             """
             
-            return super().__call__(conformer_mol = conformer_mol, batched = batched)
+            if not broken_up:
+                return super().__call__(conformer_mol = conformer_mol, batched = batched)
+            else:
+                charge_format = self.convert_to_charge_format(conformer_mol)
+                grid = self.build_grid(conformer_mol)
+                #if the charge model requires generation and reading of files to produce charges
+                monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
+                return monopole, dipole, quadropole
+                
         
         def convert_to_charge_format(self, conformer_mol: str) -> tuple[np.ndarray,list[str]]:
             """Convert openff molecule to appropriate format on which to assign charges
@@ -122,6 +130,37 @@ else:
                                             quadrupoles= quadropoles_quantity)
             #NOTE: ESP units, hartree/e and grid units are angstrom
             return (monopole_esp + dipole_esp + quadrupole_esp).m.flatten().tolist(), grid.m.tolist()
+        
+        def assign_multipoles(self, coordinates_elements: tuple[np.ndarray,str], grid: unit.Quantity) -> tuple[list, list, list]:
+            """Assign charges according to charge model selected
+
+            Parameters
+            ----------
+            ob_mol: generic python object depending on the charge model
+                Charge model appropriate python object on which to assign the charges
+
+            Returns
+            -------
+            partial_charges: list of partial charges 
+            """
+            (coordinates, elements) = coordinates_elements
+            monopoles, dipoles, quadrupoles = self.esp_model.predict(coordinates, elements)
+            #multipoles with correct units
+            monopoles_quantity = monopoles.numpy()*unit.e
+            dipoles_quantity = dipoles.numpy()*unit.e*unit.angstrom
+            quadropoles_quantity = quadrupoles.numpy()*unit.e*unit.angstrom*unit.angstrom
+            coordinates_ang = coordinates * unit.angstrom
+            monopole_esp = self.calculate_esp_monopole_au(grid_coordinates=grid,
+                                                atom_coordinates=coordinates_ang,
+                                                charges = monopoles_quantity)
+            dipole_esp = self.calculate_esp_dipole_au(grid_coordinates=grid,
+                                            atom_coordinates=coordinates_ang,
+                                            dipoles= dipoles_quantity)
+            quadrupole_esp = self.calculate_esp_quadropole_au(grid_coordinates=grid,
+                                            atom_coordinates=coordinates_ang,
+                                            quadrupoles= quadropoles_quantity)
+            #NOTE: ESP units, hartree/e and grid units are angstrom
+            return monopole_esp.m.flatten().tolist(), dipole_esp.m.flatten().tolist(), quadrupole_esp.m.flatten().tolist()
     
         def calculate_esp_monopole_au(self,
             grid_coordinates: unit.Quantity,  # N x 3
@@ -250,19 +289,24 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='RIN charge model arguments')
     parser.add_argument('--conformer', type=str, help='Conformer mol')
     parser.add_argument('--batched', help='Batch charges or not', dest='batched', action='store_true')
-    parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')    
+    parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
+    parser.add_argument('--broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_true' )   
+    parser.add_argument('--not_broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_false' )   
+
     parser.set_defaults(batched = False)
+    parser.set_defaults(multipoles = False)
    
     args = parser.parse_args()
     rin_model = RIN_model()
     #Esp currently in hartree/energy and grid in angstrom. 
     if not args.batched:
-        values, esp_grid = rin_model(conformer_mol = args.conformer, batched = args.batched) 
-        print(values, 'OO', esp_grid)
+        if not args.multipoles:
+            values, esp_grid = rin_model(conformer_mol = args.conformer, batched = args.batched) 
+            print(values, 'OO', esp_grid)
+        else:
+            multipole, dipole, quadropole = rin_model(conformer_mol = args.conformer, batched = args.batched, broken_up= args.multipoles) 
+            print(multipole, 'OO', dipole, 'OO', quadropole)
     else:
         file_path = rin_model(conformer_mol = args.conformer, batched = args.batched) 
         print(file_path)
-
-
-
 

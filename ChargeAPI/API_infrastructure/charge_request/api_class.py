@@ -51,8 +51,8 @@ def handle_charge_request(charge_model: str, batched: bool = False) -> dict[str,
             case 'MBIS':
                 script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model.py'
                 cmd = (
-                            f"conda run -n nagl-mbis python -m {script_path}  --conformer '{conformer_mol}' --batched {batched}"
-                        )
+                        f"conda run -n nagl-mbis python -m {script_path}  --conformer '{conformer_mol}' --batched {batched}"
+                       )
                 charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
                 return prepare_json_outs(charge_result)

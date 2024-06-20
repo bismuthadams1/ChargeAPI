@@ -107,6 +107,7 @@ else:
             partial_charges: list of partial charges 
             """
             (coordinates, elements) = coordinates_elements
+            print(coordinates_elements)
             monopoles, dipoles, quadrupoles = self.esp_model.predict(coordinates, elements)
             #multipoles with correct units
             monopoles_quantity = monopoles.numpy()*unit.e

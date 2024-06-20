@@ -65,7 +65,6 @@ class ExternalESPModel:
         if not batched:
             logging.info('not batched option chosen')
             conformer_mol = self.clean_input_mol(conformer_mol)
-            print(conformer_mol)
             charge_format = self.convert_to_charge_format(conformer_mol)
             grid = self.build_grid(conformer_mol)
             #if the charge model requires generation and reading of files to produce charges
@@ -203,7 +202,6 @@ class ExternalESPModel:
         
         lines = molblock.split('\n')
 
-        print(lines)
         # Ensure there are at least 4 header lines
         if len(lines) < 4:
             raise ValueError("MolBlock is too short to be valid")

@@ -84,14 +84,12 @@ else:
 
             rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
             openff_mol = Molecule.from_rdkit(rdkit_conformer, allow_undefined_stereo=True)
-            print(openff_mol.conformers[0])
-            print(openff_mol)
+
             grid_settings = MSKGridSettings(
                     type="msk", density=2.0
                 )
             grid = GridGenerator.generate(openff_mol, openff_mol.conformers[0], grid_settings)
             # grid = grid.to(unit.angstrom)
-            print(grid)
             return grid
         
         def assign_esp(self, coordinates_elements: tuple[np.ndarray,str], grid: unit.Quantity) -> list[float,float]:
@@ -107,7 +105,6 @@ else:
             partial_charges: list of partial charges 
             """
             (coordinates, elements) = coordinates_elements
-            print(coordinates_elements)
             monopoles, dipoles, quadrupoles = self.esp_model.predict(coordinates, elements)
             #multipoles with correct units
             monopoles_quantity = monopoles.numpy()*unit.e

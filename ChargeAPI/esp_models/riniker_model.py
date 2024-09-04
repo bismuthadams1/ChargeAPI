@@ -92,8 +92,9 @@ else:
 
             rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
             openff_mol = Molecule.from_rdkit(rdkit_conformer, allow_undefined_stereo=True)
+            #CURRENTLY HARD CODED
             grid_settings = MSKGridSettings(
-                    type="msk", density=2.0
+                    type="msk", density=1.0
                 )
             grid = GridGenerator.generate(openff_mol, openff_mol.conformers[0], grid_settings)
             # grid = grid.to(unit.angstrom)

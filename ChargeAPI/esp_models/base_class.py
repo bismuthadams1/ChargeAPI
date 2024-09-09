@@ -5,10 +5,12 @@ import os
 import logging 
 import numpy as np
 import tempfile
+from typing import Optional
+
 
 from rdkit import Chem
 #from openff.toolkit.topology import Molecule
-#from openff.units import unit
+from openff.units import unit
 
 from abc import abstractmethod
 
@@ -40,7 +42,7 @@ class ExternalESPModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_mol: str, file_method = False, batched = False) -> list[int]  : #| None | str
+    def __call__(self, conformer_mol: str, file_method = False, batched = False, grid: Optional[np.ndarray] = None) -> list[int]  : #| None | str
         """Get charges for molecule.
 
         Parameters
@@ -65,7 +67,10 @@ class ExternalESPModel:
             logging.info('not batched option chosen')
 
             charge_format = self.convert_to_charge_format(conformer_mol)
-            grid = self.build_grid(conformer_mol)
+            if grid:
+                grid = grid * unit.angstrom
+            else:
+                grid = self.build_grid(conformer_mol)
             #if the charge model requires generation and reading of files to produce charges
             if file_method:
                 file_path = self.generate_temp_files(charge_format)

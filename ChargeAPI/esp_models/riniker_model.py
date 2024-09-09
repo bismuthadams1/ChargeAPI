@@ -2,7 +2,7 @@
 """
 
 import os
-
+from typing import Optional
 from numpy import ndarray
 # Check if the module is imported for environment checking
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
@@ -32,7 +32,11 @@ else:
             self.esp_model = load_model()
             self.AU_ESP = unit.atomic_unit_of_energy / unit.elementary_charge
 
-        def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False, broken_up = False) -> list[int]:
+        def __call__(self,  conformer_mol: 
+            str, batched: bool, 
+            file_method: bool = False, 
+            broken_up = False,
+            grid: Optional[np.ndarray] = None) -> list[int]:
             """Get charges for molecule.
 
             Parameters
@@ -52,7 +56,9 @@ else:
             """
             
             if not broken_up:
-                return super().__call__(conformer_mol = conformer_mol, batched = batched)
+                return super().__call__(conformer_mol = conformer_mol, 
+                                        batched = batched,
+                                        grid=grid)
             else:
                 charge_format = self.convert_to_charge_format(conformer_mol)
                 grid = self.build_grid(conformer_mol)
@@ -81,7 +87,7 @@ else:
             coordinates = rdkit_conformer.GetConformer(0).GetPositions().astype(self.dtype)
             return coordinates, elements  
         
-        def build_grid(self, conformer_mol: str) -> ndarray:
+        def build_grid(self, conformer_mol: str) -> np.ndarray:
             """Builds the grid on which to assign the esp
 
             Parameters
@@ -293,19 +299,31 @@ if __name__ == "__main__":
     parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
     parser.add_argument('--broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_true' )   
     parser.add_argument('--not_broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_false' )   
-
+    parser.add_argument('--grid', help='Provide a grid broken up', dest='grid', action='store_true' )   
+    parser.add_argument('--no-grid', help='Do not a grid broken up', dest='grid', action='store_false' )   
+    #how do I supply the grid argument as optiona?
     parser.set_defaults(batched = False)
     parser.set_defaults(multipoles = False)
-   
+    # Handle grid array
+
     args = parser.parse_args()
     rin_model = RIN_model()
+    grid_array = None
+    if parser.grid_array:
+        grid_array_flat = np.fromstring(args.grid_array.strip('[]'), sep=' ')  # Parse flat grid array
+        grid_array = grid_array_flat.reshape(-1, 3)  # Reshape to (-1, 3)
     #Esp currently in hartree/energy and grid in angstrom. 
     if not args.batched:
         if not args.multipoles:
-            values, esp_grid = rin_model(conformer_mol = args.conformer, batched = args.batched) 
+            values, esp_grid = rin_model(conformer_mol = args.conformer,
+                                         batched = args.batched,
+                                         grid = grid_array) 
             print(values, 'OO', esp_grid)
         else:
-            multipole, dipole, quadropole = rin_model(conformer_mol = args.conformer, batched = args.batched, broken_up= args.multipoles) 
+            multipole, dipole, quadropole = rin_model(conformer_mol = args.conformer,
+                                                      batched = args.batched,
+                                                      broken_up= args.multipoles,
+                                                      grid=grid_array) 
             print(multipole, 'OO', dipole, 'OO', quadropole)
     else:
         file_path = rin_model(conformer_mol = args.conformer, batched = args.batched) 

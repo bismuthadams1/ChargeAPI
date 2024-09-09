@@ -2,12 +2,17 @@ import subprocess
 import tempfile
 from multiprocessing import Process
 import json
+from typing import Optional
 import numpy as np
 import os
 import logging
 import ChargeAPI
 
-def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = False, broken_up: bool = False) -> dict[str,any]:
+def handle_esp_request(charge_model: str, 
+                       conformer_mol: str, 
+                       batched: bool = False, 
+                       broken_up: bool = False,
+                       grid: Optional[np.ndarray] = None) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model. Batched option accepts a JSON of molecule names and their
     corresponding forms in molblocks. 
@@ -23,10 +28,20 @@ def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = Fa
     else:
         broken_up_option = '--not_broken_up'
 
+    if grid is not None:
+        grid_str = np.array2string(grid.flatten())  # Convert the grid array to a string to pass via the command line
+        grid_command = f"--grid_array '{grid_str}'"
+    else:
+        grid_command = ''
+        
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (
-                f"conda run -n riniker python {script_path} --conformer '{conformer_mol}' {batched_option} {broken_up_option}"
+                f"conda run -n riniker python {script_path} \
+                --conformer '{conformer_mol}' \
+                {batched_option}  \
+                {broken_up_option} \
+                {grid_command}"
             )
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             return prepare_json_outs(charge_result, batched=batched, broken_up=broken_up)

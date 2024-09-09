@@ -61,10 +61,13 @@ else:
                                         grid=grid)
             else:
                 charge_format = self.convert_to_charge_format(conformer_mol)
-                grid = self.build_grid(conformer_mol)
+                if grid is None:
+                    grid = self.build_grid(conformer_mol)
+                else:
+                    grid = grid
                 #if the charge model requires generation and reading of files to produce charges
                 monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
-                return monopole, dipole, quadropole
+                return monopole, dipole, quadropole, grid
                 
         
         def convert_to_charge_format(self, conformer_mol: str) -> tuple[np.ndarray,list[str]]:
@@ -299,8 +302,8 @@ if __name__ == "__main__":
     parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
     parser.add_argument('--broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_true' )   
     parser.add_argument('--not_broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_false' )   
-    parser.add_argument('--grid', help='Provide a grid broken up', dest='grid', action='store_true' )   
-    parser.add_argument('--no-grid', help='Do not a grid broken up', dest='grid', action='store_false' )   
+    parser.add_argument('--grid_array', type=str, nargs='?', dest='grid_array', help='Provide the grid array as a flattened string')
+
     #how do I supply the grid argument as optiona?
     parser.set_defaults(batched = False)
     parser.set_defaults(multipoles = False)
@@ -309,10 +312,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     rin_model = RIN_model()
     grid_array = None
-    if parser.grid_array:
-        grid_array_flat = np.fromstring(args.grid_array.strip('[]'), sep=' ')  # Parse flat grid array
-        grid_array = grid_array_flat.reshape(-1, 3)  # Reshape to (-1, 3)
-    #Esp currently in hartree/energy and grid in angstrom. 
+    if args.grid_array:
+        # grid_array_flat = np.fromstring(args.grid_array.strip('[]'), sep=' ')  # Parse flat grid array
+        grid_list = args.grid_array.strip('[]').split()  # Split the string into a list of elements
+        grid_array_flat = np.array([float(x) for x in grid_list])  # Convert the list to a NumPy array of floats
+        grid_array = grid_array_flat.reshape(-1, 3) * unit.angstrom  # Reshape to (-1, 3)    #Esp currently in hartree/energy and grid in angstrom. 
     if not args.batched:
         if not args.multipoles:
             values, esp_grid = rin_model(conformer_mol = args.conformer,
@@ -320,11 +324,11 @@ if __name__ == "__main__":
                                          grid = grid_array) 
             print(values, 'OO', esp_grid)
         else:
-            multipole, dipole, quadropole = rin_model(conformer_mol = args.conformer,
+            multipole, dipole, quadropole, grid = rin_model(conformer_mol = args.conformer,
                                                       batched = args.batched,
                                                       broken_up= args.multipoles,
                                                       grid=grid_array) 
-            print(multipole, 'OO', dipole, 'OO', quadropole)
+            print(multipole, 'OO', dipole, 'OO', quadropole, 'OO', grid)
     else:
         file_path = rin_model(conformer_mol = args.conformer, batched = args.batched) 
         print(file_path)

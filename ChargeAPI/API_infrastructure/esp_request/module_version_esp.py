@@ -29,11 +29,15 @@ def handle_esp_request(charge_model: str,
         broken_up_option = '--not_broken_up'
 
     if grid is not None:
-        grid_str = np.array2string(grid.flatten())  # Convert the grid array to a string to pass via the command line
+        np.set_printoptions(threshold=np.inf)  # Ensure all elements are printed
+
+        grid_str = np.array2string(grid.flatten(), separator=' ', precision=8)  
+        # grid_str = np.array2string(grid.flatten())  # Convert the grid array to a string to pass via the command line
         grid_command = f"--grid_array '{grid_str}'"
     else:
         grid_command = ''
-        
+    print('grid is')
+    print(grid_command)
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (
@@ -43,6 +47,8 @@ def handle_esp_request(charge_model: str,
                 {broken_up_option} \
                 {grid_command}"
             )
+            print('total grid command:')
+            print(cmd)
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             return prepare_json_outs(charge_result, batched=batched, broken_up=broken_up)
     else:
@@ -58,7 +64,8 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool 
     """
 
     complete_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
-    print(complete_result_list)
+    print('errors are:')
+    print(charge_result.stderr.decode())
 
     if not batched:
         if not broken_up:
@@ -70,12 +77,14 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool 
                 'error': charge_result.stderr.decode()  # Include the error message if any
             }
         else:             
-            (monopole, dipole, quadropole) = complete_result_list.split('OO')
+            print(complete_result_list)
+            (monopole, dipole, quadropole, grid) = complete_result_list.split('OO')
             # Create JSON response
             json_response = {
                 'monopole': monopole.strip('\n\n'),
                 'dipole':dipole.strip('\n\n'),
                 'quadropole':quadropole.strip('\n\n'),
+                'grid': grid.strip('\n\n'),
                 'error': charge_result.stderr.decode()  # Include the error message if any
             }
     else:

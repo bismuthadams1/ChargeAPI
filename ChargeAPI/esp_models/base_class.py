@@ -6,8 +6,10 @@ import logging
 import numpy as np
 import tempfile
 import re
+import sys
 
 from rdkit import Chem
+from rdkit.Chem import rdmolfiles
 #from openff.toolkit.topology import Molecule
 #from openff.units import unit
 
@@ -64,7 +66,7 @@ class ExternalESPModel:
         """
         if not batched:
             logging.info('not batched option chosen')
-            conformer_mol = self.clean_input_mol(conformer_mol)
+
             charge_format = self.convert_to_charge_format(conformer_mol)
             grid = self.build_grid(conformer_mol)
             #if the charge model requires generation and reading of files to produce charges
@@ -85,8 +87,18 @@ class ExternalESPModel:
             for mol in mol_dictionary.items():
                 charge_format = self.convert_to_charge_format(mol[1])
                 grid = self.build_grid(mol[1])
-                values, esp_grid = self.assign_esp(charge_format, grid)
-                esp_result = dict()
+                try:
+                    values, esp_grid = self.assign_esp(charge_format, grid)
+                except Exception as e:
+                    mol_block = rdmolfiles.MolFromMolBlock(mol[1], removeHs=False)
+                    #this will be the length of the number of points in the grid
+                    dummy_length = grid.shape[0]
+                    #return esp values as 0
+                    values =  [0] * dummy_length
+                    esp_grid = grid
+                    error_message = f'esp generation failed with {Chem.MolToSmiles(mol_block)} due to {e}'
+                    print(error_message, file=sys.stderr)  # Write error message to stderr
+                esp_result = {}
                 esp_result['esp_values'] = values
                 esp_result['esp_grid'] = esp_grid
                 mol_dictionary[mol[0]] = esp_result
@@ -96,7 +108,6 @@ class ExternalESPModel:
                 json.dump(mol_dictionary, outfile, indent=2)
                 #charge_file_path = os.path.abspath(charge_file)
             return esp_file
-
 
 
     def convert_to_charge_format(self, conformer_mol: str):

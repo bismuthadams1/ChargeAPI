@@ -5,9 +5,14 @@ import json
 import numpy as np
 import os
 import logging
+from typing import Optional
 import ChargeAPI
 
-def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = False) -> dict[str,any]:
+def handle_esp_request(charge_model: str, 
+                       conformer_mol: str, 
+                       batched: bool = False, 
+                       broken_up: bool = False,
+                       grid: Optional[np.ndarray] = None) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model. Batched option accepts a JSON of molecule names and their
     corresponding forms in molblocks. 
@@ -17,13 +22,34 @@ def handle_esp_request(charge_model: str, conformer_mol: str, batched: bool = Fa
     else:
         batched_option = '--not_batched'
 
+    if broken_up:
+        broken_up_option = '--broken_up'
+        batched_option = '--not_batched'
+    else:
+        broken_up_option = '--not_broken_up'
+
+    if grid is not None:
+        np.set_printoptions(threshold=np.inf)  # Ensure all elements are printed
+
+        grid_str = np.array2string(grid.flatten(), separator=' ', precision=8)  
+        grid_command = f"--grid_array '{grid_str}'"
+    else:
+        grid_command = ''
+    print('grid is')
+    print(grid_command)
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (
-                f"conda run -n riniker python {script_path} --conformer '{conformer_mol}' {batched_option}"
+                f"conda run -n riniker python {script_path} \
+                --conformer '{conformer_mol}' \
+                {batched_option}  \
+                {broken_up_option} \
+                {grid_command}"
             )
+            print('total grid command:')
+            print(cmd)
             charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            return prepare_json_outs(charge_result, batched=batched)
+            return prepare_json_outs(charge_result, batched=batched, broken_up=broken_up)
     else:
             raise NameError
 

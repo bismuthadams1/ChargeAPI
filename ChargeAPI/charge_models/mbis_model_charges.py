@@ -1,12 +1,14 @@
 """
 Requires Nagl MBIS model environment : https://github.com/jthorton/nagl-mbis
 """
+
+
 import os
 # Check if the module is imported for environment checking
 if os.environ.get("IMPORT_CHECK") == "1":
     ENV_NAME = "naglmbis"  # Only define the environment name
     # Stop further execution of the module
-    MODULE = "MBIS_Model"
+    MODULE = "MBIS_Model_charge"
 else:
     #used for execution
     from naglmbis.models import load_charge_model
@@ -16,13 +18,13 @@ else:
     import subprocess
     import argparse
 
-    class MBIS_Model(ExternalChargeModel):
+    class MBIS_Model_charge(ExternalChargeModel):
 
-        _name = "naglmbis"
+        _name = "naglmbis_charge"
         def __init__(self, ftype="json"):
             super().__init__()
             self.file_type = ftype
-            self.charge_model = load_charge_model(charge_model="nagl-v1-mbis-dipole")
+            self.charge_model = load_charge_model(charge_model="nagl-v1-mbis")
 
         def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int] | None:
             """Get charges for molecule.
@@ -67,7 +69,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    mbis_model = MBIS_Model()
+    mbis_model = MBIS_Model_charge()
     charges = mbis_model(conformer_mol = args.conformer, batched = args.batched) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)

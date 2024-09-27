@@ -4,7 +4,7 @@ import subprocess
 import pkgutil
 import importlib
 import os
-from .base_class import ExternalChargeModel
+from .base_class import ExternalESPModel
 
 EXT_CHARGE_MODELS = {}
 

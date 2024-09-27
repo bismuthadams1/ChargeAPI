@@ -5,6 +5,7 @@ import os
 import logging 
 import numpy as np
 import tempfile
+import re
 
 from rdkit import Chem
 #from openff.toolkit.topology import Molecule
@@ -18,7 +19,7 @@ LOGGER.setLevel(logging.ERROR)
 
 # EXT_CHARGE_MODELS = {}
 
-class ExternalChargeModel:
+class ExternalESPModel:
     """Base class for external charge models
     """
     subclasses = {}
@@ -63,8 +64,9 @@ class ExternalChargeModel:
         """
         if not batched:
             logging.info('not batched option chosen')
-
+            conformer_mol = self.clean_input_mol(conformer_mol)
             charge_format = self.convert_to_charge_format(conformer_mol)
+            grid = self.build_grid(conformer_mol)
             #if the charge model requires generation and reading of files to produce charges
             if file_method:
                 file_path = self.generate_temp_files(charge_format)
@@ -72,8 +74,8 @@ class ExternalChargeModel:
                 charges = self.read_charge_output(charge_file_path)
             #other charge model types will produce charges based on python objects in internal memory
             else:
-                charges = self.assign_charges(charge_format)
-            return charges
+                values, esp_grid = self.assign_esp(charge_format, grid)
+            return values, esp_grid
 
         else:
             logging.info(' batched option chosen')
@@ -82,14 +84,18 @@ class ExternalChargeModel:
             mol_dictionary = self.molfile_to_dict(conformer_mol)
             for mol in mol_dictionary.items():
                 charge_format = self.convert_to_charge_format(mol[1])
-                charges = self.assign_charges(charge_format)
-                mol_dictionary[mol[0]] = charges
+                grid = self.build_grid(mol[1])
+                values, esp_grid = self.assign_esp(charge_format, grid)
+                esp_result = dict()
+                esp_result['esp_values'] = values
+                esp_result['esp_grid'] = esp_grid
+                mol_dictionary[mol[0]] = esp_result
             #write charges dictionary to file
-            charge_file = f"{conformer_mol.strip('.json')}_charges.json"
-            with open(charge_file,"w+") as outfile:
+            esp_file = f"{conformer_mol.strip('.json')}_esp.json"
+            with open(esp_file,"w+") as outfile:
                 json.dump(mol_dictionary, outfile, indent=2)
                 #charge_file_path = os.path.abspath(charge_file)
-            return charge_file
+            return esp_file
 
 
 
@@ -117,7 +123,7 @@ class ExternalChargeModel:
 
         return mol_dictionary
 
-    def assign_charges(self, charge_format: any):
+    def assign_esp(self, charge_format: any, grid: np.ndarray):
         """Assign charges according to charge model selected
 
         Parameters
@@ -171,3 +177,50 @@ class ExternalChargeModel:
         -------
         returns charges as a list of lists (charges for each atom for each molecule)
         """
+
+    def build_grid(molecule: any) -> np.ndarray:
+        """Build grid required for ESP method around molecule
+        
+        
+        """
+
+
+    def clean_input_mol(self, conformer_mol: str) -> str:
+        """cleanup the input molecule
+
+        Parameters
+        ----------
+        conformer_mol: str
+            conformer in which to assign the esp too.
+        Returns
+        -------
+        
+        """
+        molblock = conformer_mol.replace('\\n', '\n')
+
+        molblock = molblock.strip()
+        
+        lines = molblock.split('\n')
+
+        # Ensure there are at least 4 header lines
+        if len(lines) < 4:
+            raise ValueError("MolBlock is too short to be valid")
+        
+        header_lines = lines[:4]
+        atom_lines = []
+        bond_lines = []
+        other_lines = []
+        
+        for line in lines[4:]:
+            if re.match(r"^\s*\d+\s+\d+\s+\d+\s+\d+", line):
+                bond_lines.append(line)
+            elif re.match(r"^\s*-?\d+\.\d+\s+-?\d+\.\d+\s+-?\d+\.\d+\s+[A-Z]", line):
+                atom_lines.append(line)
+            else:
+                other_lines.append(line)
+        
+        corrected_lines = header_lines + atom_lines + bond_lines + other_lines
+        # corrected_lines.append('M  END')
+        corrected_lines.insert(1,'')
+        return '\n'.join(corrected_lines)
+

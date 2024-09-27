@@ -1,0 +1,11 @@
+name: openbabel
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - rdkit
+  - ca-certificates
+  - openssl
+  - conda-forge::openbabel
+  - certifi
+prefix: /home/vboxuser/miniforge3/envs/openbabel

@@ -5,8 +5,10 @@ import os
 import logging 
 import numpy as np
 import tempfile
+import sys
 
 from rdkit import Chem
+from rdkit.Chem import rdmolfiles
 #from openff.toolkit.topology import Molecule
 #from openff.units import unit
 
@@ -76,13 +78,19 @@ class ExternalChargeModel:
             return charges
 
         else:
-            logging.info(' batched option chosen')
-
+            logging.info('batched option chosen')
             #make dictionary from json file
             mol_dictionary = self.molfile_to_dict(conformer_mol)
             for mol in mol_dictionary.items():
                 charge_format = self.convert_to_charge_format(mol[1])
-                charges = self.assign_charges(charge_format)
+                try:
+                    charges = self.assign_charges(charge_format)
+                except Exception as e:
+                    mol_block = rdmolfiles.MolFromMolBlock(mol[1], removeHs=False)
+                    no_atoms = len([atom for atom in mol_block.GetAtoms()])
+                    charges = [0] * no_atoms
+                    error_message = f'charges failed with {Chem.MolToSmiles(mol_block)} due to {e}'
+                    print(error_message, file=sys.stderr)  # Write error message to stderr
                 mol_dictionary[mol[0]] = charges
             #write charges dictionary to file
             charge_file = f"{conformer_mol.strip('.json')}_charges.json"

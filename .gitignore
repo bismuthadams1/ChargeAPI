@@ -161,3 +161,6 @@ cython_debug/
 
 #MAC stuff
 **/.DS_Store
+
+#temp files from calculations
+**/*.sdf

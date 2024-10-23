@@ -5,11 +5,12 @@ import os
 import logging 
 import numpy as np
 import tempfile
-import re
+from typing import Optional
+
 
 from rdkit import Chem
 #from openff.toolkit.topology import Molecule
-#from openff.units import unit
+from openff.units import unit
 
 from abc import abstractmethod
 
@@ -41,7 +42,7 @@ class ExternalESPModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_mol: str, file_method = False, batched = False) -> list[int]  : #| None | str
+    def __call__(self, conformer_mol: str, file_method = False, batched = False, grid: Optional[np.ndarray] = None) -> list[int]  : #| None | str
         """Get charges for molecule.
 
         Parameters
@@ -64,9 +65,12 @@ class ExternalESPModel:
         """
         if not batched:
             logging.info('not batched option chosen')
-            conformer_mol = self.clean_input_mol(conformer_mol)
+
             charge_format = self.convert_to_charge_format(conformer_mol)
-            grid = self.build_grid(conformer_mol)
+            if grid:
+                grid = grid * unit.angstrom
+            else:
+                grid = self.build_grid(conformer_mol)
             #if the charge model requires generation and reading of files to produce charges
             if file_method:
                 file_path = self.generate_temp_files(charge_format)
@@ -183,44 +187,3 @@ class ExternalESPModel:
         
         
         """
-
-
-    def clean_input_mol(self, conformer_mol: str) -> str:
-        """cleanup the input molecule
-
-        Parameters
-        ----------
-        conformer_mol: str
-            conformer in which to assign the esp too.
-        Returns
-        -------
-        
-        """
-        molblock = conformer_mol.replace('\\n', '\n')
-
-        molblock = molblock.strip()
-        
-        lines = molblock.split('\n')
-
-        # Ensure there are at least 4 header lines
-        if len(lines) < 4:
-            raise ValueError("MolBlock is too short to be valid")
-        
-        header_lines = lines[:4]
-        atom_lines = []
-        bond_lines = []
-        other_lines = []
-        
-        for line in lines[4:]:
-            if re.match(r"^\s*\d+\s+\d+\s+\d+\s+\d+", line):
-                bond_lines.append(line)
-            elif re.match(r"^\s*-?\d+\.\d+\s+-?\d+\.\d+\s+-?\d+\.\d+\s+[A-Z]", line):
-                atom_lines.append(line)
-            else:
-                other_lines.append(line)
-        
-        corrected_lines = header_lines + atom_lines + bond_lines + other_lines
-        # corrected_lines.append('M  END')
-        corrected_lines.insert(1,'')
-        return '\n'.join(corrected_lines)
-

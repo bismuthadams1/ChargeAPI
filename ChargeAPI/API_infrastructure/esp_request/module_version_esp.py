@@ -6,6 +6,7 @@ from typing import Optional
 import numpy as np
 import os
 import logging
+from typing import Optional
 import ChargeAPI
 
 def handle_esp_request(charge_model: str, 
@@ -32,7 +33,10 @@ def handle_esp_request(charge_model: str,
         np.set_printoptions(threshold=np.inf)  # Ensure all elements are printed
 
         grid_str = np.array2string(grid.flatten(), separator=' ', precision=8)  
+<<<<<<< HEAD
         # grid_str = np.array2string(grid.flatten())  # Convert the grid array to a string to pass via the command line
+=======
+>>>>>>> 9bcd9ea1cc7e7568831013e6a8907a21da507561
         grid_command = f"--grid_array '{grid_str}'"
     else:
         grid_command = ''

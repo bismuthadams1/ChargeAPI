@@ -7,7 +7,7 @@ from numpy import ndarray
 # Check if the module is imported for environment checking
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 if os.environ.get("IMPORT_CHECK") == "1":
-    ENV_NAME = "rinnicker"  # Only define the environment name
+    ENV_NAME = "rinicker"  # Only define the environment name
     # Stop further execution of the module
     MODULE = "RIM_model"
 else:
@@ -101,13 +101,16 @@ else:
 
             rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
             openff_mol = Molecule.from_rdkit(rdkit_conformer, allow_undefined_stereo=True)
+<<<<<<< HEAD
             #CURRENTLY HARD CODED
+=======
+
+>>>>>>> 9bcd9ea1cc7e7568831013e6a8907a21da507561
             grid_settings = MSKGridSettings(
                     type="msk", density=1.0
                 )
             grid = GridGenerator.generate(openff_mol, openff_mol.conformers[0], grid_settings)
             # grid = grid.to(unit.angstrom)
-
             return grid
         
         def assign_esp(self, coordinates_elements: tuple[np.ndarray,str], grid: unit.Quantity) -> list[float,float]:

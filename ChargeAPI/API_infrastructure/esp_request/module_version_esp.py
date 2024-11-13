@@ -2,6 +2,7 @@ import subprocess
 import tempfile
 from multiprocessing import Process
 import json
+from typing import Optional
 import numpy as np
 import os
 import logging
@@ -32,6 +33,10 @@ def handle_esp_request(charge_model: str,
         np.set_printoptions(threshold=np.inf)  # Ensure all elements are printed
 
         grid_str = np.array2string(grid.flatten(), separator=' ', precision=8)  
+<<<<<<< HEAD
+        # grid_str = np.array2string(grid.flatten())  # Convert the grid array to a string to pass via the command line
+=======
+>>>>>>> 9bcd9ea1cc7e7568831013e6a8907a21da507561
         grid_command = f"--grid_array '{grid_str}'"
     else:
         grid_command = ''
@@ -53,7 +58,7 @@ def handle_esp_request(charge_model: str,
     else:
             raise NameError
 
-def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool = False) -> json:
+def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool = False, broken_up: bool = False) -> json:
     """
     grabs data from subprocess and produces a json of the output
     Paramters
@@ -63,16 +68,29 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool 
     """
 
     complete_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
-    print(complete_result_list)
+    print('errors are:')
+    print(charge_result.stderr.decode())
 
     if not batched:
-        (esp, grid) = complete_result_list.split('OO')
-        # Create JSON response
-        json_response = {
-            'esp_result': esp.strip('\n\n'),
-            'grid':grid.strip('\n\n'),
-            'error': charge_result.stderr.decode()  # Include the error message if any
-        }
+        if not broken_up:
+            (esp, grid) = complete_result_list.split('OO')
+            # Create JSON response
+            json_response = {
+                'esp_result': esp.strip('\n\n'),
+                'grid':grid.strip('\n\n'),
+                'error': charge_result.stderr.decode()  # Include the error message if any
+            }
+        else:             
+            print(complete_result_list)
+            (monopole, dipole, quadropole, grid) = complete_result_list.split('OO')
+            # Create JSON response
+            json_response = {
+                'monopole': monopole.strip('\n\n'),
+                'dipole':dipole.strip('\n\n'),
+                'quadropole':quadropole.strip('\n\n'),
+                'grid': grid.strip('\n\n'),
+                'error': charge_result.stderr.decode()  # Include the error message if any
+            }
     else:
         path_to_result = complete_result_list
         # Create JSON response

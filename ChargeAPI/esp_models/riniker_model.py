@@ -36,6 +36,7 @@ else:
             str, batched: bool, 
             file_method: bool = False, 
             broken_up = False,
+            batched_grid = False,
             grid: Optional[np.ndarray] = None) -> list[int]:
             """Get charges for molecule.
 
@@ -101,11 +102,6 @@ else:
 
             rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
             openff_mol = Molecule.from_rdkit(rdkit_conformer, allow_undefined_stereo=True)
-<<<<<<< HEAD
-            #CURRENTLY HARD CODED
-=======
-
->>>>>>> 9bcd9ea1cc7e7568831013e6a8907a21da507561
             grid_settings = MSKGridSettings(
                     type="msk", density=1.0
                 )
@@ -306,7 +302,8 @@ if __name__ == "__main__":
     parser.add_argument('--broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_true' )   
     parser.add_argument('--not_broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_false' )   
     parser.add_argument('--grid_array', type=str, nargs='?', dest='grid_array', help='Provide the grid array as a flattened string')
-
+    parser.add_argument('--batched_grid', help='Batch grid or not', dest='batched_grid', action='store_true')
+    parser.add_argument('--not_batched_grid', help='Batch grid or not', dest='batched_grid', action='store_false')
     #how do I supply the grid argument as optiona?
     parser.set_defaults(batched = False)
     parser.set_defaults(multipoles = False)
@@ -327,12 +324,18 @@ if __name__ == "__main__":
                                          grid = grid_array) 
             print(values, 'OO', esp_grid)
         else:
+                
             multipole, dipole, quadropole, grid = rin_model(conformer_mol = args.conformer,
-                                                      batched = args.batched,
-                                                      broken_up= args.multipoles,
-                                                      grid=grid_array) 
+                                                        batched = args.batched,
+                                                        broken_up= args.multipoles,
+                                                        grid=grid_array) 
             print(multipole, 'OO', dipole, 'OO', quadropole, 'OO', grid)
     else:
-        file_path = rin_model(conformer_mol = args.conformer, batched = args.batched) 
-        print(file_path)
+        if args.batched_grid:
+            file_path = rin_model(
+                conformer_mol = args.conformer, batched = args.batched, batched_grid = args.batched_grid
+            ) 
+        else:
+            file_path = rin_model(conformer_mol = args.conformer, batched = args.batched) 
+            print(file_path)    
 

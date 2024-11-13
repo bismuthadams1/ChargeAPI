@@ -42,7 +42,12 @@ class ExternalESPModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_mol: str, file_method = False, batched = False, grid: Optional[np.ndarray] = None) -> list[int]  : #| None | str
+    def __call__(self,
+                conformer_mol: str,
+                file_method = False,
+                batched = False,
+                batched_grid = False,
+                grid: Optional[np.ndarray] = None) -> list[int]  : #| None | str
         """Get charges for molecule.
 
         Parameters
@@ -83,17 +88,26 @@ class ExternalESPModel:
 
         else:
             logging.info(' batched option chosen')
-
             #make dictionary from json file
             mol_dictionary = self.molfile_to_dict(conformer_mol)
-            for mol in mol_dictionary.items():
-                charge_format = self.convert_to_charge_format(mol[1])
-                grid = self.build_grid(mol[1])
+            for molhash, mol_data in mol_dictionary.items():
+                molblock = mol_data[0]
+                mol_grid = mol_data[1]  # This could be None
+                charge_format = self.convert_to_charge_format(molblock)
+                if grid:
+                    grid = grid * unit.angstrom
+                else:
+                    if batched_grid:
+                        #loop through grid points here
+                        grid = np.array(mol_grid) * unit.angstrom
+                    else:
+                        grid = self.build_grid(molblock)
+
                 values, esp_grid = self.assign_esp(charge_format, grid)
                 esp_result = dict()
                 esp_result['esp_values'] = values
                 esp_result['esp_grid'] = esp_grid
-                mol_dictionary[mol[0]] = esp_result
+                mol_dictionary[molhash[0]] = esp_result
             #write charges dictionary to file
             esp_file = f"{conformer_mol.strip('.json')}_esp.json"
             with open(esp_file,"w+") as outfile:

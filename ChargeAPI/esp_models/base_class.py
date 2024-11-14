@@ -73,7 +73,7 @@ class ExternalESPModel:
             logging.info('not batched option chosen')
 
             charge_format = self.convert_to_charge_format(conformer_mol)
-            if grid:
+            if grid is None:
                 grid = grid * unit.angstrom
             else:
                 grid = self.build_grid(conformer_mol)
@@ -91,31 +91,31 @@ class ExternalESPModel:
             logging.info(' batched option chosen')
             #make dictionary from json file
             mol_dictionary = self.molfile_to_dict(conformer_mol)
+            results_dictionary = {}
             for molhash, mol_data in mol_dictionary.items():
                 molblock = mol_data[0]
                 mol_grid = mol_data[1]  # This could be None
                 charge_format = self.convert_to_charge_format(molblock)
-                if grid:
-                    grid = grid * unit.angstrom
+                if mol_grid is None:
+                    grid = self.build_grid(molblock)
                 else:
-                    if batched_grid:
-                        #loop through grid points here
-                        grid = np.array(mol_grid) * unit.angstrom
-                    else:
-                        grid = self.build_grid(molblock)
+                    #loop through grid points here
+                    grid = np.array(mol_grid).reshape(-1,3) * unit.angstrom
+                
                 if broken_up:
                     monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
                     values = (monopole, dipole, quadropole)
+                    esp_grid = grid.m.tolist()
                 else:
                     values, esp_grid = self.assign_esp(charge_format, grid)
                 esp_result = dict()
                 esp_result['esp_values'] = values
                 esp_result['esp_grid'] = esp_grid
-                mol_dictionary[molhash[0]] = esp_result
+                results_dictionary[molhash] = esp_result
             #write charges dictionary to file
             esp_file = f"{conformer_mol.strip('.json')}_esp.json"
             with open(esp_file,"w+") as outfile:
-                json.dump(mol_dictionary, outfile, indent=2)
+                json.dump(results_dictionary, outfile, indent=2)
                 #charge_file_path = os.path.abspath(charge_file)
             return esp_file
 

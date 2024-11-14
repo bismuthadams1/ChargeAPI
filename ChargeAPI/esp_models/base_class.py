@@ -44,9 +44,10 @@ class ExternalESPModel:
     @abstractmethod
     def __call__(self,
                 conformer_mol: str,
-                file_method = False,
-                batched = False,
-                batched_grid = False,
+                file_method: bool = False,
+                batched: bool = False,
+                batched_grid: bool = False,
+                broken_up: bool = False,
                 grid: Optional[np.ndarray] = None) -> list[int]  : #| None | str
         """Get charges for molecule.
 
@@ -102,8 +103,11 @@ class ExternalESPModel:
                         grid = np.array(mol_grid) * unit.angstrom
                     else:
                         grid = self.build_grid(molblock)
-
-                values, esp_grid = self.assign_esp(charge_format, grid)
+                if broken_up:
+                    monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
+                    values = (monopole, dipole, quadropole)
+                else:
+                    values, esp_grid = self.assign_esp(charge_format, grid)
                 esp_result = dict()
                 esp_result['esp_values'] = values
                 esp_result['esp_grid'] = esp_grid
@@ -153,6 +157,20 @@ class ExternalESPModel:
         -------
         partial_charges: list of partial charges 
         
+        """
+    
+    def assign_multipoles(self, charge_format: any, grid: np,ndarray):
+        """Assign charges according to charge model selected
+
+        Parameters
+        ----------
+        ob_mol: generic python object depending on the charge model
+            Charge model appropriate python object on which to assign the charges
+
+        Returns
+        -------
+        tuple[list]
+            tuple of multipoles  
         """
 
     def generate_temp_files(self, charge_format: any):

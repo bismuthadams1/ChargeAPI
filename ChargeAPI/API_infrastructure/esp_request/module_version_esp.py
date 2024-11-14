@@ -26,7 +26,7 @@ def handle_esp_request(charge_model: str,
 
     if broken_up:
         broken_up_option = '--broken_up'
-        batched_option = '--not_batched'
+        # batched_option = '--not_batched'
     else:
         broken_up_option = '--not_broken_up'
 

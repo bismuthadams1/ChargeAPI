@@ -56,19 +56,28 @@ else:
                 Files containing charges for each molecule
             """
             
-            if not broken_up:
-                return super().__call__(conformer_mol = conformer_mol, 
-                                        batched = batched,
-                                        grid=grid)
-            else:
-                charge_format = self.convert_to_charge_format(conformer_mol)
-                if grid is None:
-                    grid = self.build_grid(conformer_mol)
-                else:
-                    grid = grid
-                #if the charge model requires generation and reading of files to produce charges
-                monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
-                return monopole, dipole, quadropole, grid
+            # if not broken_up:
+            #     return super().__call__(conformer_mol = conformer_mol, 
+            #                             batched = batched,
+            #                             grid=grid,
+            #                             broken_up=broken_up,
+            #                             batched_grid=batched_grid)
+            # else:
+            #     charge_format = self.convert_to_charge_format(conformer_mol)
+            #     if grid is None:
+            #         grid = self.build_grid(conformer_mol)
+            #     else:
+            #         grid = grid
+            #     #if the charge model requires generation and reading of files to produce charges
+            #     monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
+            #     return monopole, dipole, quadropole, grid
+            return super().__call__(
+                conformer_mol = conformer_mol, 
+                batched = batched,
+                grid=grid,
+                broken_up=broken_up,
+                batched_grid=batched_grid,
+            )
                 
         
         def convert_to_charge_format(self, conformer_mol: str) -> tuple[np.ndarray,list[str]]:
@@ -150,7 +159,8 @@ else:
 
             Returns
             -------
-            partial_charges: list of partial charges 
+            tuple[list]
+                tuple of multipoles  
             """
             (coordinates, elements) = coordinates_elements
             monopoles, dipoles, quadrupoles = self.esp_model.predict(coordinates, elements)

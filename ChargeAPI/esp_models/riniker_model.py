@@ -335,6 +335,7 @@ if __name__ == "__main__":
                 batched_grid = args.batched_grid,
                 broken_up= args.broken_up,
             ) 
+            print(file_path)    
         else:
             file_path = rin_model(
                 conformer_mol = args.conformer,

@@ -116,8 +116,8 @@ class ExternalESPModel:
             esp_file = f"{conformer_mol.strip('.json')}_esp.json"
             with open(esp_file,"w+") as outfile:
                 json.dump(results_dictionary, outfile, indent=2)
-                #charge_file_path = os.path.abspath(charge_file)
-            return esp_file
+            charge_file_path = os.path.abspath(esp_file)
+            return charge_file_path
 
 
 

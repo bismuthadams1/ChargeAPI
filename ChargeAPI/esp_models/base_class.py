@@ -200,7 +200,6 @@ class ExternalESPModel:
         returns file containing charges
         """
 
-
     def read_charge_output(charge_files: str):
         """Read charges from files produced by external code
         

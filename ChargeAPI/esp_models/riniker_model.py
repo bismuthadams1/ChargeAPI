@@ -153,17 +153,17 @@ else:
             dipoles_quantity = dipoles.numpy()*unit.e*unit.angstrom
             quadropoles_quantity = quadrupoles.numpy()*unit.e*unit.angstrom*unit.angstrom
             coordinates_ang = coordinates * unit.angstrom
-            monopole_esp = self.calculate_esp_monopole_au(grid_coordinates=grid,
-                                                atom_coordinates=coordinates_ang,
-                                                charges = monopoles_quantity)
-            dipole_esp = self.calculate_esp_dipole_au(grid_coordinates=grid,
-                                            atom_coordinates=coordinates_ang,
-                                            dipoles= dipoles_quantity)
-            quadrupole_esp = self.calculate_esp_quadropole_au(grid_coordinates=grid,
-                                            atom_coordinates=coordinates_ang,
-                                            quadrupoles= quadropoles_quantity)
-            #NOTE: ESP units, hartree/e and grid units are angstrom
-            return monopole_esp.m.flatten().tolist(), dipole_esp.m.flatten().tolist(), quadrupole_esp.m.flatten().tolist()
+            # monopole_esp = self.calculate_esp_monopole_au(grid_coordinates=grid,
+            #                                     atom_coordinates=coordinates_ang,
+            #                                     charges = monopoles_quantity)
+            # dipole_esp = self.calculate_esp_dipole_au(grid_coordinates=grid,
+            #                                 atom_coordinates=coordinates_ang,
+            #                                 dipoles= dipoles_quantity)
+            # quadrupole_esp = self.calculate_esp_quadropole_au(grid_coordinates=grid,
+            #                                 atom_coordinates=coordinates_ang,
+            #                                 quadrupoles= quadropoles_quantity)
+            # #NOTE: ESP units, hartree/e and grid units are angstrom
+            return monopoles_quantity.m.flatten().tolist(), dipoles_quantity.m.flatten().tolist(), quadropoles_quantity.m.flatten().tolist()
     
         def calculate_esp_monopole_au(self,
             grid_coordinates: unit.Quantity,  # N x 3

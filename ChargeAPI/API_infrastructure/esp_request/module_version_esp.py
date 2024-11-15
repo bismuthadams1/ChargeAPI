@@ -62,7 +62,9 @@ def handle_esp_request(charge_model: str,
     else:
             raise NameError
 
-def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool = False, broken_up: bool = False) -> json:
+def prepare_json_outs(charge_result: subprocess.CompletedProcess,
+                      batched: bool = False,
+                      broken_up: bool = False) -> json:
     """
     grabs data from subprocess and produces a json of the output
     Paramters

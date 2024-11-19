@@ -21,6 +21,7 @@ else:
     from openff.recharge.grids import GridSettingsType, GridGenerator
     from openff.recharge.grids import LatticeGridSettings, MSKGridSettings
     from openff.toolkit import Molecule
+    import logging
 
     class RIN_model(ExternalESPModel):
         
@@ -149,6 +150,10 @@ else:
             (coordinates, elements) = coordinates_elements
             monopoles, dipoles, quadrupoles = self.esp_model.predict(coordinates, elements)
             #multipoles with correct units
+            logging.error(f"monopole predicted {monopoles}")
+            logging.error(f"dipoles predicted {dipoles}")
+            logging.error(f"quadrupole predicted {quadrupoles}")
+
             monopoles_quantity = monopoles.numpy()*unit.e
             dipoles_quantity = dipoles.numpy()*unit.e*unit.angstrom
             quadropoles_quantity = quadrupoles.numpy()*unit.e*unit.angstrom*unit.angstrom

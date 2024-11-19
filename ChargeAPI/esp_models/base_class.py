@@ -95,8 +95,8 @@ class ExternalESPModel:
             for molhash, mol_data in mol_dictionary.items():
                 molblock = mol_data[0]
                 mol_grid = mol_data[1]  # This could be None
-                logging.error(f'molbock is {molblock}')
-                logging.error(f'mol_grid is {mol_grid}')
+                # logging.error(f'molbock is {molblock}')
+                # logging.error(f'mol_grid is {mol_grid}')
                 charge_format = self.convert_to_charge_format(molblock)
                 if mol_grid is None:
                     grid = self.build_grid(molblock)

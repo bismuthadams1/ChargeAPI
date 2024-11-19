@@ -43,8 +43,6 @@ def handle_esp_request(charge_model: str,
     else:
         batched_grid = '--not_batched_grid'    
     
-    print('grid is')
-    print(grid_command)
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (

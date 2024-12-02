@@ -24,7 +24,7 @@ else:
         def __init__(self, ftype="json"):
             super().__init__()
             self.file_type = ftype
-            self.charge_model = load_charge_model(charge_model="nagl-gas-charge-dipole-wb")
+            self.charge_model = load_charge_model(charge_model="nagl-water-charge-dipole-esp-wb-default")
 
         def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int] | None:
             """Get charges for molecule.

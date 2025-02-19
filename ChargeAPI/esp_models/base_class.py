@@ -42,7 +42,13 @@ class ExternalESPModel:
         """
 
     @abstractmethod
-    def __call__(self, conformer_mol: str, file_method = False, batched = False, grid: Optional[np.ndarray] = None) -> list[int]  : #| None | str
+    def __call__(self,
+                conformer_mol: str,
+                file_method: bool = False,
+                batched: bool = False,
+                batched_grid: bool = False,
+                broken_up: bool = False,
+                grid: Optional[np.ndarray] = None) -> list[int]  : #| None | str
         """Get charges for molecule.
 
         Parameters
@@ -67,7 +73,7 @@ class ExternalESPModel:
             logging.info('not batched option chosen')
 
             charge_format = self.convert_to_charge_format(conformer_mol)
-            if grid:
+            if grid is not None:
                 grid = grid * unit.angstrom
             else:
                 grid = self.build_grid(conformer_mol)
@@ -83,23 +89,37 @@ class ExternalESPModel:
 
         else:
             logging.info(' batched option chosen')
-
             #make dictionary from json file
             mol_dictionary = self.molfile_to_dict(conformer_mol)
-            for mol in mol_dictionary.items():
-                charge_format = self.convert_to_charge_format(mol[1])
-                grid = self.build_grid(mol[1])
-                values, esp_grid = self.assign_esp(charge_format, grid)
+            results_dictionary = {}
+            for molhash, mol_data in mol_dictionary.items():
+                molblock = mol_data[0]
+                mol_grid = mol_data[1]  # This could be None
+                # logging.error(f'molbock is {molblock}')
+                # logging.error(f'mol_grid is {mol_grid}')
+                charge_format = self.convert_to_charge_format(molblock)
+                if mol_grid is None:
+                    grid = self.build_grid(molblock)
+                else:
+                    #loop through grid points here
+                    grid = np.array(mol_grid).reshape(-1,3) * unit.angstrom
+                
+                if broken_up:
+                    monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
+                    values = (monopole, dipole, quadropole)
+                    esp_grid = grid.m.tolist()
+                else:
+                    values, esp_grid = self.assign_esp(charge_format, grid)
                 esp_result = dict()
                 esp_result['esp_values'] = values
                 esp_result['esp_grid'] = esp_grid
-                mol_dictionary[mol[0]] = esp_result
+                results_dictionary[molhash] = esp_result
             #write charges dictionary to file
             esp_file = f"{conformer_mol.strip('.json')}_esp.json"
             with open(esp_file,"w+") as outfile:
-                json.dump(mol_dictionary, outfile, indent=2)
-                #charge_file_path = os.path.abspath(charge_file)
-            return esp_file
+                json.dump(results_dictionary, outfile, indent=2)
+            charge_file_path = os.path.abspath(esp_file)
+            return charge_file_path
 
 
 
@@ -119,7 +139,7 @@ class ExternalESPModel:
         """
 
     def molfile_to_dict(self, conformer_file_path: str):
-        """Convert json molfile to 
+        """Convert json molfile to dictionary
         
         """
         with open(conformer_file_path, 'r') as conformer_file:
@@ -139,6 +159,20 @@ class ExternalESPModel:
         -------
         partial_charges: list of partial charges 
         
+        """
+    
+    def assign_multipoles(self, charge_format: any, grid: np,ndarray):
+        """Assign charges according to charge model selected
+
+        Parameters
+        ----------
+        ob_mol: generic python object depending on the charge model
+            Charge model appropriate python object on which to assign the charges
+
+        Returns
+        -------
+        tuple[list]
+            tuple of multipoles  
         """
 
     def generate_temp_files(self, charge_format: any):
@@ -167,7 +201,6 @@ class ExternalESPModel:
         -------
         returns file containing charges
         """
-
 
     def read_charge_output(charge_files: str):
         """Read charges from files produced by external code

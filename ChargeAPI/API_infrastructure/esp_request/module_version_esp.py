@@ -13,7 +13,8 @@ def handle_esp_request(charge_model: str,
                        conformer_mol: str, 
                        batched: bool = False, 
                        broken_up: bool = False,
-                       grid: Optional[np.ndarray] = None) -> dict[str,any]:
+                       grid: Optional[np.ndarray] = None,
+                       batched_grid: bool = False) -> dict[str,any]:
     """
     handle the charge request and run the correct charge model. Batched option accepts a JSON of molecule names and their
     corresponding forms in molblocks. 
@@ -25,7 +26,7 @@ def handle_esp_request(charge_model: str,
 
     if broken_up:
         broken_up_option = '--broken_up'
-        batched_option = '--not_batched'
+        # batched_option = '--not_batched'
     else:
         broken_up_option = '--not_broken_up'
 
@@ -36,8 +37,12 @@ def handle_esp_request(charge_model: str,
         grid_command = f"--grid_array '{grid_str}'"
     else:
         grid_command = ''
-    print('grid is')
-    print(grid_command)
+        
+    if batched_grid:
+        batched_grid = '--batched_grid'
+    else:
+        batched_grid = '--not_batched_grid'    
+    
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (
@@ -45,7 +50,8 @@ def handle_esp_request(charge_model: str,
                 --conformer '{conformer_mol}' \
                 {batched_option}  \
                 {broken_up_option} \
-                {grid_command}"
+                {grid_command} \
+                {batched_grid}"
             )
             print('total grid command:')
             print(cmd)
@@ -54,7 +60,9 @@ def handle_esp_request(charge_model: str,
     else:
             raise NameError
 
-def prepare_json_outs(charge_result: subprocess.CompletedProcess, batched: bool = False, broken_up: bool = False) -> json:
+def prepare_json_outs(charge_result: subprocess.CompletedProcess,
+                      batched: bool = False,
+                      broken_up: bool = False) -> json:
     """
     grabs data from subprocess and produces a json of the output
     Paramters

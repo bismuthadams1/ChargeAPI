@@ -21,6 +21,7 @@ else:
     from openff.recharge.grids import GridSettingsType, GridGenerator
     from openff.recharge.grids import LatticeGridSettings, MSKGridSettings
     from openff.toolkit import Molecule
+    import logging
 
     class RIN_model(ExternalESPModel):
         
@@ -36,6 +37,7 @@ else:
             str, batched: bool, 
             file_method: bool = False, 
             broken_up = False,
+            batched_grid = False,
             grid: Optional[np.ndarray] = None) -> list[int]:
             """Get charges for molecule.
 
@@ -54,6 +56,7 @@ else:
             charge_files: List of str
                 Files containing charges for each molecule
             """
+<<<<<<< HEAD
             
             if not broken_up:
                 return super().__call__(conformer_mol = conformer_mol, 
@@ -68,6 +71,16 @@ else:
                 #if the charge model requires generation and reading of files to produce charges
                 monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
                 return monopole, dipole, quadropole, grid
+=======
+        
+            return super().__call__(
+                conformer_mol = conformer_mol, 
+                batched = batched,
+                grid=grid,
+                broken_up=broken_up,
+                batched_grid=batched_grid,
+            )
+>>>>>>> 1dda03bd162899acab08fec5647d2dd9d70f1c3f
                 
         
         def convert_to_charge_format(self, conformer_mol: str) -> tuple[np.ndarray,list[str]]:
@@ -105,7 +118,6 @@ else:
                     type="msk", density=1.0
                 )
             grid = GridGenerator.generate(openff_mol, openff_mol.conformers[0], grid_settings)
-            # grid = grid.to(unit.angstrom)
             return grid
         
         def assign_esp(self, coordinates_elements: tuple[np.ndarray,str], grid: unit.Quantity) -> list[float,float]:
@@ -149,26 +161,31 @@ else:
 
             Returns
             -------
-            partial_charges: list of partial charges 
+            tuple[list]
+                tuple of multipoles  
             """
             (coordinates, elements) = coordinates_elements
             monopoles, dipoles, quadrupoles = self.esp_model.predict(coordinates, elements)
             #multipoles with correct units
+            logging.error(f"monopole predicted {monopoles}")
+            logging.error(f"dipoles predicted {dipoles}")
+            logging.error(f"quadrupole predicted {quadrupoles}")
+
             monopoles_quantity = monopoles.numpy()*unit.e
             dipoles_quantity = dipoles.numpy()*unit.e*unit.angstrom
             quadropoles_quantity = quadrupoles.numpy()*unit.e*unit.angstrom*unit.angstrom
             coordinates_ang = coordinates * unit.angstrom
-            monopole_esp = self.calculate_esp_monopole_au(grid_coordinates=grid,
-                                                atom_coordinates=coordinates_ang,
-                                                charges = monopoles_quantity)
-            dipole_esp = self.calculate_esp_dipole_au(grid_coordinates=grid,
-                                            atom_coordinates=coordinates_ang,
-                                            dipoles= dipoles_quantity)
-            quadrupole_esp = self.calculate_esp_quadropole_au(grid_coordinates=grid,
-                                            atom_coordinates=coordinates_ang,
-                                            quadrupoles= quadropoles_quantity)
-            #NOTE: ESP units, hartree/e and grid units are angstrom
-            return monopole_esp.m.flatten().tolist(), dipole_esp.m.flatten().tolist(), quadrupole_esp.m.flatten().tolist()
+            # monopole_esp = self.calculate_esp_monopole_au(grid_coordinates=grid,
+            #                                     atom_coordinates=coordinates_ang,
+            #                                     charges = monopoles_quantity)
+            # dipole_esp = self.calculate_esp_dipole_au(grid_coordinates=grid,
+            #                                 atom_coordinates=coordinates_ang,
+            #                                 dipoles= dipoles_quantity)
+            # quadrupole_esp = self.calculate_esp_quadropole_au(grid_coordinates=grid,
+            #                                 atom_coordinates=coordinates_ang,
+            #                                 quadrupoles= quadropoles_quantity)
+            # #NOTE: ESP units, hartree/e and grid units are angstrom
+            return monopoles_quantity.m.flatten().tolist(), dipoles_quantity.m.flatten().tolist(), quadropoles_quantity.m.flatten().tolist()
     
         def calculate_esp_monopole_au(self,
             grid_coordinates: unit.Quantity,  # N x 3
@@ -298,13 +315,14 @@ if __name__ == "__main__":
     parser.add_argument('--conformer', type=str, help='Conformer mol')
     parser.add_argument('--batched', help='Batch charges or not', dest='batched', action='store_true')
     parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
-    parser.add_argument('--broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_true' )   
-    parser.add_argument('--not_broken_up', help='Provide multipoles broken up', dest='multipoles', action='store_false' )   
+    parser.add_argument('--broken_up', help='Provide multipoles broken up', dest='broken_up', action='store_true' )   
+    parser.add_argument('--not_broken_up', help='Provide multipoles broken up', dest='broken_up', action='store_false' )   
     parser.add_argument('--grid_array', type=str, nargs='?', dest='grid_array', help='Provide the grid array as a flattened string')
-
-    #how do I supply the grid argument as optiona?
+    parser.add_argument('--batched_grid', help='Batch grid or not', dest='batched_grid', action='store_true')
+    parser.add_argument('--not_batched_grid', help='Batch grid or not', dest='batched_grid', action='store_false')
+    #how do I supply the grid argument as optional?
     parser.set_defaults(batched = False)
-    parser.set_defaults(multipoles = False)
+    parser.set_defaults(broken_up = False)
     # Handle grid array
 
     args = parser.parse_args()
@@ -316,18 +334,35 @@ if __name__ == "__main__":
         grid_array_flat = np.array([float(x) for x in grid_list])  # Convert the list to a NumPy array of floats
         grid_array = grid_array_flat.reshape(-1, 3) * unit.angstrom  # Reshape to (-1, 3)    #Esp currently in hartree/energy and grid in angstrom. 
     if not args.batched:
-        if not args.multipoles:
-            values, esp_grid = rin_model(conformer_mol = args.conformer,
-                                         batched = args.batched,
-                                         grid = grid_array) 
+        if not args.broken_up:
+            values, esp_grid = rin_model(
+                conformer_mol = args.conformer,
+                batched = args.batched,
+                grid = grid_array
+            ) 
             print(values, 'OO', esp_grid)
         else:
-            multipole, dipole, quadropole, grid = rin_model(conformer_mol = args.conformer,
-                                                      batched = args.batched,
-                                                      broken_up= args.multipoles,
-                                                      grid=grid_array) 
+            multipole, dipole, quadropole, grid = rin_model(
+                conformer_mol = args.conformer,
+                batched = args.batched,
+                broken_up= args.broken_up,
+                grid=grid_array
+            ) 
             print(multipole, 'OO', dipole, 'OO', quadropole, 'OO', grid)
     else:
-        file_path = rin_model(conformer_mol = args.conformer, batched = args.batched) 
-        print(file_path)
+        if args.batched_grid:
+            file_path = rin_model(
+                conformer_mol = args.conformer,
+                batched = args.batched,
+                batched_grid = args.batched_grid,
+                broken_up= args.broken_up,
+            ) 
+            print(file_path)    
+        else:
+            file_path = rin_model(
+                conformer_mol = args.conformer,
+                batched = args.batched,
+                broken_up=args.broken_up
+            ) 
+            print(file_path)    
 

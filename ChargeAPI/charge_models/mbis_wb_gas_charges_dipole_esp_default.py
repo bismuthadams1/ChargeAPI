@@ -20,7 +20,7 @@ else:
 
     class MBIS_Model_charge(ExternalChargeModel):
 
-        _name = "naglmbis_wb_esp_water_charge"
+        _name = "naglmbis_wb_esp_gas_charge_dipole_esp_default"
         def __init__(self, ftype="json"):
             super().__init__()
             self.file_type = ftype

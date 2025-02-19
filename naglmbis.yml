@@ -5,6 +5,7 @@ dependencies:
   - python
   - pip
   - pytest
+  - polars
   - pytest-cov
   - pyarrow
   - dgl[version='>=1']

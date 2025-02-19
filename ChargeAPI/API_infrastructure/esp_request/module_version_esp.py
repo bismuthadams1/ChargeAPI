@@ -33,10 +33,6 @@ def handle_esp_request(charge_model: str,
         np.set_printoptions(threshold=np.inf)  # Ensure all elements are printed
 
         grid_str = np.array2string(grid.flatten(), separator=' ', precision=8)  
-<<<<<<< HEAD
-        # grid_str = np.array2string(grid.flatten())  # Convert the grid array to a string to pass via the command line
-=======
->>>>>>> 9bcd9ea1cc7e7568831013e6a8907a21da507561
         grid_command = f"--grid_array '{grid_str}'"
     else:
         grid_command = ''
@@ -45,7 +41,7 @@ def handle_esp_request(charge_model: str,
     if charge_model == 'RIN':
             script_path = f'{os.path.dirname(ChargeAPI.__file__)}/esp_models/riniker_model.py'
             cmd = (
-                f"conda run -n riniker python {script_path} \
+                f"conda run -n riniker python '{script_path}'' \
                 --conformer '{conformer_mol}' \
                 {batched_option}  \
                 {broken_up_option} \

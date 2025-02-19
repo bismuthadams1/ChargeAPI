@@ -64,7 +64,7 @@ else:
                 if grid is None:
                     grid = self.build_grid(conformer_mol)
                 else:
-                    grid = grid
+                    grid = grid * unit.angstrom
                 #if the charge model requires generation and reading of files to produce charges
                 monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
                 return monopole, dipole, quadropole, grid
@@ -101,11 +101,6 @@ else:
 
             rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
             openff_mol = Molecule.from_rdkit(rdkit_conformer, allow_undefined_stereo=True)
-<<<<<<< HEAD
-            #CURRENTLY HARD CODED
-=======
-
->>>>>>> 9bcd9ea1cc7e7568831013e6a8907a21da507561
             grid_settings = MSKGridSettings(
                     type="msk", density=1.0
                 )

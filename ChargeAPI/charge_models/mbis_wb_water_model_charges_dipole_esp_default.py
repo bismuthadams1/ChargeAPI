@@ -24,11 +24,7 @@ else:
         def __init__(self, ftype="json"):
             super().__init__()
             self.file_type = ftype
-<<<<<<< HEAD:ChargeAPI/charge_models/mbis_wb_gas_esp_default.py
             self.charge_model = load_charge_model(charge_model="nagl-gas-charge-dipole-esp-wb-default")
-=======
-            self.charge_model = load_charge_model(charge_model="nagl-water-charge-dipole-esp-wb-default")
->>>>>>> 1dda03bd162899acab08fec5647d2dd9d70f1c3f:ChargeAPI/charge_models/mbis_wb_water_model_charges_dipole_esp_default.py
 
         def __call__(self,  conformer_mol: str, batched: bool, file_method: bool = False) -> list[int] | None:
             """Get charges for molecule.

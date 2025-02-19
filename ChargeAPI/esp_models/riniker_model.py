@@ -56,7 +56,6 @@ else:
             charge_files: List of str
                 Files containing charges for each molecule
             """
-<<<<<<< HEAD
             
             if not broken_up:
                 return super().__call__(conformer_mol = conformer_mol, 
@@ -71,16 +70,6 @@ else:
                 #if the charge model requires generation and reading of files to produce charges
                 monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
                 return monopole, dipole, quadropole, grid
-=======
-        
-            return super().__call__(
-                conformer_mol = conformer_mol, 
-                batched = batched,
-                grid=grid,
-                broken_up=broken_up,
-                batched_grid=batched_grid,
-            )
->>>>>>> 1dda03bd162899acab08fec5647d2dd9d70f1c3f
                 
         
         def convert_to_charge_format(self, conformer_mol: str) -> tuple[np.ndarray,list[str]]:

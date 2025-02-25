@@ -14,7 +14,9 @@ else:
     from naglmbis.models import load_charge_model
     from base_class  import ExternalChargeModel
     from openff.toolkit.topology import Molecule
+    from rdkit import Chem
     import rdkit
+    import sys
     import subprocess
     import argparse
 
@@ -68,9 +70,50 @@ if __name__ == "__main__":
     parser.set_defaults(batched = False)
 
     args = parser.parse_args()
+    # if args.conformer == '-':
+    #     args.conformer = sys.stdin.read()
+    #     print(args.conformer)
 
+    # try:
+    #     mol = Chem.MolFromPDBBlock(args.conformer)
+    #     if mol is None:
+    #         raise ValueError("Failed to parse PDB block.")
+    #     # Convert the molecule to a mol block (MDL Molfile format)
+    #     conformer_str = Chem.MolToMolBlock(mol)
+    # except Exception as e:
+    #     print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)
+    #     print("pdb block received", args.conformer, file=sys.stderr, flush=True)
+    #     sys.exit(1)
+
+    # If the provided --conformer argument is a file, read its contents.
+    # if os.path.isfile(args.conformer):
+    #     with open(args.conformer, 'r') as f:
+    #         pdb_block = f.read()
+    # else:
+    #     pdb_block = args.conformer
+    pdb_block = args.conformer
+
+    # Debug print (can be removed or logged as needed)
+    # print("Received pdb block:\n", pdb_block)
+
+    try:
+        
+        mol = Chem.MolFromPDBFile(pdb_block, removeHs = False)
+        conformer_str = Chem.MolToMolBlock(mol)
+    except Exception as e:
+        try:
+            # mol = Chem.MolFromMolBlock(pdb_block, removeHs = False)
+            # if mol is None:
+            #     raise ValueError("Failed to parse PDB block.")
+        
+            # # Convert the molecule to a MOL block (MDL Molfile format)
+            conformer_str = pdb_block
+        except Exception as e:
+            print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)
+            print("PDB block received:", pdb_block, file=sys.stderr, flush=True)
+            sys.exit(1)
     mbis_model = MBIS_Model_charge()
-    charges = mbis_model(conformer_mol = args.conformer, batched = args.batched) 
+    charges = mbis_model(conformer_mol = conformer_str, batched = args.batched) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~

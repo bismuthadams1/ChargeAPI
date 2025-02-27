@@ -23,22 +23,22 @@ CHARGE_MODELS = Literal[
     ]
 
 model_locations = {
-    'EEM' : '/charge_models/eem_model.py',
-    'MBIS': '/charge_models/mbis_model.py',
-    'MBIS_CHARGE': '/charge_models/mbis_model_charges.py',
-    'MBIS_WB_GAS_CHARGE': '/charge_models/mbis_wb_gas_model_charges.py',
-    'MBIS_WB_GAS_CHARGE_DIPOLE':'/charge_models/mbis_wb_gas_model_charges_dipole.py',
-    'MBIS_WB_WATER_CHARGE':'/charge_models/mbis_wb_water_model_charges.py',
-    'MBIS_WB_WATER_CHARGE_DIPOLE':'/charge_models/mbis_wb_water_model_charges_dipole.py',
-    'MBIS_WB_WATER_CHARGE_DIPOLE_ESP':'/charge_models/mbis_wb_water_model_charges_dipole_esp_default.py',
-    'MBIS_WB_GAS_ESP_2A':'/charge_models/mbis_wb_gas_esp_2A.py',
-    'MBIS_WB_GAS_ESP_15A':'/charge_models/mbis_wb_gas_esp_15A.py',
-    'MBIS_WB_GAS_ESP_DEFAULT':'mbis_wb_gas_charges_dipole_esp_default.py',
+    'EEM' : ['openbabel','/charge_models/eem_model.py'],
+    'MBIS': ['naglmbis','/charge_models/mbis_model.py'],
+    'MBIS_CHARGE': ['naglmbis','/charge_models/mbis_model_charges.py'],
+    'MBIS_WB_GAS_CHARGE': ['naglmbis','/charge_models/mbis_wb_gas_model_charges.py'],
+    'MBIS_WB_GAS_CHARGE_DIPOLE':['naglmbis','/charge_models/mbis_wb_gas_model_charges_dipole.py'],
+    'MBIS_WB_WATER_CHARGE':['naglmbis','/charge_models/mbis_wb_water_model_charges.py'],
+    'MBIS_WB_WATER_CHARGE_DIPOLE':['naglmbis','/charge_models/mbis_wb_water_model_charges_dipole.py'],
+    'MBIS_WB_WATER_CHARGE_DIPOLE_ESP':['naglmbis','/charge_models/mbis_wb_water_model_charges_dipole_esp_default.py'],
+    'MBIS_WB_GAS_ESP_2A':['naglmbis','/charge_models/mbis_wb_gas_esp_2A.py'],
+    'MBIS_WB_GAS_ESP_15A':['naglmbis','/charge_models/mbis_wb_gas_esp_15A.py'],
+    'MBIS_WB_GAS_ESP_DEFAULT':['naglmbis','mbis_wb_gas_charges_dipole_esp_default.py'],
 }
 
 def _charge_requester(
     charge_model: CHARGE_MODELS,
-    batched: LiteralString['--batched','--not_batched'],
+    batched: Literal['--batched','--not_batched'],
     protein: bool,
     conformer_mol: str,
     ) -> dict[str,any]:
@@ -47,19 +47,19 @@ def _charge_requester(
         print('protein mode')
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pdb') as tmp_file:
             tmp_file.write(conformer_mol)
-            input = tmp_file.name  # This is the file path we'll pass on.
+            input = tmp_file.name  
     else:
         print('ligand mode')
         input = conformer_mol
         
     script_path = os.path.join(
         os.path.dirname(ChargeAPI.__file__),
-        model_locations[charge_model]
+        model_locations[charge_model][1]
     )
 
     # Build the command, passing the temporary file name as the argument.
     cmd = [
-        "conda", "run", "--no-capture-output", "-n", "naglmbis", "python", script_path,
+        "conda", "run", "--no-capture-output", "-n", model_locations[charge_model][0], "python", script_path,
         "--conformer", input, batched  # Now passing the tmp file instead of '-'
     ]
             # Run the subprocess (note: we no longer use 'input=' since the script will read the file).
@@ -74,20 +74,20 @@ def _charge_requester(
     
     
 
-def handle_charge_request(charge_model: str, conformer_mol: str, batched: bool = False, protein = False) -> dict[str,any, None]:
+def handle_charge_request(charge_model: CHARGE_MODELS, conformer_mol: str, batched: bool = False, protein = False) -> dict[str,any, None]:
     """
     handle the charge request and run the correct charge model. Batched option accepts a JSON of molecule names and their
     corresponding forms in molblocks. 
     """
     if batched:
-        batched = '--batched'
+        batched_choice = '--batched'
     else:
-        batched = '--not_batched'
+        batched_choice= '--not_batched'
 
     try:
         result = _charge_requester(
             charge_model=charge_model,
-            batched=batched,
+            batched=batched_choice,
             protein=protein,
             conformer_mol=conformer_mol
         )

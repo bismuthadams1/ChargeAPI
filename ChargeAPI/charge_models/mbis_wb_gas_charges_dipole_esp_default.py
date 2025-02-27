@@ -70,27 +70,6 @@ if __name__ == "__main__":
     parser.set_defaults(batched = False)
 
     args = parser.parse_args()
-    # if args.conformer == '-':
-    #     args.conformer = sys.stdin.read()
-    #     print(args.conformer)
-
-    # try:
-    #     mol = Chem.MolFromPDBBlock(args.conformer)
-    #     if mol is None:
-    #         raise ValueError("Failed to parse PDB block.")
-    #     # Convert the molecule to a mol block (MDL Molfile format)
-    #     conformer_str = Chem.MolToMolBlock(mol)
-    # except Exception as e:
-    #     print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)
-    #     print("pdb block received", args.conformer, file=sys.stderr, flush=True)
-    #     sys.exit(1)
-
-    # If the provided --conformer argument is a file, read its contents.
-    # if os.path.isfile(args.conformer):
-    #     with open(args.conformer, 'r') as f:
-    #         pdb_block = f.read()
-    # else:
-    #     pdb_block = args.conformer
     pdb_block = args.conformer
 
     # Debug print (can be removed or logged as needed)
@@ -102,11 +81,6 @@ if __name__ == "__main__":
         conformer_str = Chem.MolToMolBlock(mol)
     except Exception as e:
         try:
-            # mol = Chem.MolFromMolBlock(pdb_block, removeHs = False)
-            # if mol is None:
-            #     raise ValueError("Failed to parse PDB block.")
-        
-            # # Convert the molecule to a MOL block (MDL Molfile format)
             conformer_str = pdb_block
         except Exception as e:
             print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)

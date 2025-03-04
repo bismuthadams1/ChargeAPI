@@ -3,99 +3,97 @@ import tempfile
 from multiprocessing import Process
 import json
 import numpy as np
+from typing import LiteralString, Literal
 import os
 import logging
 import ChargeAPI
 
-def handle_charge_request(charge_model: str, conformer_mol: str, batched: bool = False) -> dict[str,any]:
+CHARGE_MODELS = Literal[
+    'EEM',
+    'MBIS',
+    'MBIS_CHARGE',
+    'MBIS_WB_GAS_CHARGE',
+    'MBIS_WB_GAS_CHARGE_DIPOLE',
+    'MBIS_WB_WATER_CHARGE',
+    'MBIS_WB_WATER_CHARGE_DIPOLE',
+    'MBIS_WB_WATER_CHARGE_DIPOLE_ESP',
+    'MBIS_WB_GAS_ESP_2A',
+    'MBIS_WB_GAS_ESP_15A',
+    'MBIS_WB_GAS_ESP_DEFAULT',
+    ]
+
+model_locations = {
+    'EEM' : ['openbabel','/charge_models/eem_model.py'],
+    'MBIS': ['naglmbis','/charge_models/mbis_model.py'],
+    'MBIS_CHARGE': ['naglmbis','/charge_models/mbis_model_charges.py'],
+    'MBIS_WB_GAS_CHARGE': ['naglmbis','/charge_models/mbis_wb_gas_model_charges.py'],
+    'MBIS_WB_GAS_CHARGE_DIPOLE':['naglmbis','/charge_models/mbis_wb_gas_model_charges_dipole.py'],
+    'MBIS_WB_WATER_CHARGE':['naglmbis','/charge_models/mbis_wb_water_model_charges.py'],
+    'MBIS_WB_WATER_CHARGE_DIPOLE':['naglmbis','/charge_models/mbis_wb_water_model_charges_dipole.py'],
+    'MBIS_WB_WATER_CHARGE_DIPOLE_ESP':['naglmbis','/charge_models/mbis_wb_water_model_charges_dipole_esp_default.py'],
+    'MBIS_WB_GAS_ESP_2A':['naglmbis','/charge_models/mbis_wb_gas_esp_2A.py'],
+    'MBIS_WB_GAS_ESP_15A':['naglmbis','/charge_models/mbis_wb_gas_esp_15A.py'],
+    'MBIS_WB_GAS_ESP_DEFAULT':['naglmbis','/charge_models/mbis_wb_gas_charges_dipole_esp_default.py'],
+}
+
+def _charge_requester(
+    charge_model: CHARGE_MODELS,
+    batched: Literal['--batched','--not_batched'],
+    protein: bool,
+    conformer_mol: str,
+    ) -> dict[str,any]:
+    
+    if protein:
+        print('protein mode')
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pdb') as tmp_file:
+            tmp_file.write(conformer_mol)
+            input = tmp_file.name  
+        protein_option = '--protein'
+    else:
+        print('ligand mode')
+        input = conformer_mol
+        protein_option = '--not_protein'
+
+    script_path = f'{os.path.dirname(ChargeAPI.__file__)}'+ model_locations[charge_model][1]
+
+    # Build the command, passing the temporary file name as the argument.
+    cmd = [
+        "conda", "run", "--no-capture-output", "-n", model_locations[charge_model][0], "python", script_path,
+        "--conformer", input, batched, protein_option  # Now passing the tmp file instead of '-'
+    ]
+
+    # Run the subprocess (note: we no longer use 'input=' since the script will read the file).
+    charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Optionally, delete the temporary file after use.
+    if protein:
+            os.remove(input)
+            
+    return prepare_json_outs(charge_result)
+
+
+def handle_charge_request(charge_model: CHARGE_MODELS, conformer_mol: str, batched: bool = False, protein = False) -> dict[str,any, None]:
     """
     handle the charge request and run the correct charge model. Batched option accepts a JSON of molecule names and their
     corresponding forms in molblocks. 
     """
     if batched:
-        batched = '--batched'
+        batched_choice = '--batched'
     else:
-        batched = '--not_batched'
+        batched_choice= '--not_batched'
 
-    if charge_model == 'EEM':
-            script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/eem_model.py'
-            cmd = (
-                f"conda run -n openbabel python '{script_path}' --conformer '{conformer_mol}' {batched}"
-            )
-            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS':
-            script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model.py'
-            cmd = (
-                f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
-            )
-            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_CHARGE':
-            script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_model_charges.py'
-            cmd = (
-                f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
-            )
-            charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_WB_GAS_CHARGE':
-           script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_wb_gas_model_charges.py'
-           cmd = (
-                f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
-            )
-           charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-           return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_WB_GAS_CHARGE_DIPOLE':
-           script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_wb_gas_model_charges_dipole.py'
-           cmd = (
-                f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
-            )
-           charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-           return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_WB_WATER_CHARGE':
-           script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_wb_water_model_charges.py'
-           cmd = (
-                f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
-            )
-           charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-           return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_WB_WATER_CHARGE_DIPOLE':
-           script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_wb_water_model_charges_dipole.py'
-           cmd = (
-                f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
-            )
-           charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-           return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_WB_WATER_CHARGE_DIPOLE_ESP':
-           script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_wb_water_model_charges_dipole_esp_default.py'
-           cmd = (
-                f"conda run -n naglmbis python {script_path} --conformer '{conformer_mol}'  {batched}"
-            )
-           charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-           return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_WB_GAS_ESP_2A':
-        script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_wb_gas_esp_2A.py'
-        cmd = (
-            f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
+    try:
+        result = _charge_requester(
+            charge_model=charge_model,
+            batched=batched_choice,
+            protein=protein,
+            conformer_mol=conformer_mol
         )
-        charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_WB_GAS_ESP_15A':
-        script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_wb_gas_esp_15A.py'
-        cmd = (
-            f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
-        )
-        charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        return prepare_json_outs(charge_result)
-    elif charge_model == 'MBIS_WB_GAS_ESP_DEFAULT':
-        script_path = f'{os.path.dirname(ChargeAPI.__file__)}/charge_models/mbis_wb_gas_charges_dipole_esp_default.py'
-        cmd = (
-            f"conda run -n naglmbis python '{script_path}' --conformer '{conformer_mol}'  {batched}"
-        )
-        charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        return prepare_json_outs(charge_result)
-    else:
-            raise NameError("Charge model not recognised")
+        return result
+    except KeyError:
+        
+        raise Exception("charge model does not exist")
+        
 
 def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
     """
@@ -105,7 +103,7 @@ def prepare_json_outs(charge_result: subprocess.CompletedProcess) -> json:
     charge_result:  subprocess.CompletedProcess
         Result of the subprocess run command in/out/error info
     """
-    charge_result_list = charge_result.stdout.decode()  # Convert the output to a list if it's a string
+    charge_result_list = charge_result.stdout.decode()  # Convert the output to a list of strings
     # Create JSON response
     json_response = {
         'charge_result': charge_result_list.strip('\n\n'),

@@ -67,25 +67,23 @@ if __name__ == "__main__":
     parser.add_argument('--conformer', type=str, help='Conformer mol')
     parser.add_argument('--batched', help='Batch charges or not', action='store_true')
     parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
+    parser.add_argument('--protein', help='Protein or not', dest='protein_option', action='store_true')
+    parser.add_argument('--not_protein', help='Protein or not', dest='protein_option', action='store_false')
     parser.set_defaults(batched = False)
 
     args = parser.parse_args()
-    pdb_block = args.conformer
+    molecule_input = args.conformer
 
-    # Debug print (can be removed or logged as needed)
-    # print("Received pdb block:\n", pdb_block)
-
-    try:
-        
-        mol = Chem.MolFromPDBFile(pdb_block, removeHs = False)
-        conformer_str = Chem.MolToMolBlock(mol)
-    except Exception as e:
+    if args.protein_option:
         try:
-            conformer_str = pdb_block
+            mol = Chem.MolFromPDBFile(molecule_input, removeHs = False)
+            conformer_str = Chem.MolToMolBlock(mol)
         except Exception as e:
             print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)
-            print("PDB block received:", pdb_block, file=sys.stderr, flush=True)
-            sys.exit(1)
+            print("PDB block received:", molecule_input, file=sys.stderr, flush=True)
+    else:
+         conformer_str = molecule_input
+
     mbis_model = MBIS_Model_charge()
     charges = mbis_model(conformer_mol = conformer_str, batched = args.batched) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~

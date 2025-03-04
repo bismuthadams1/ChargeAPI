@@ -33,7 +33,7 @@ model_locations = {
     'MBIS_WB_WATER_CHARGE_DIPOLE_ESP':['naglmbis','/charge_models/mbis_wb_water_model_charges_dipole_esp_default.py'],
     'MBIS_WB_GAS_ESP_2A':['naglmbis','/charge_models/mbis_wb_gas_esp_2A.py'],
     'MBIS_WB_GAS_ESP_15A':['naglmbis','/charge_models/mbis_wb_gas_esp_15A.py'],
-    'MBIS_WB_GAS_ESP_DEFAULT':['naglmbis','mbis_wb_gas_charges_dipole_esp_default.py'],
+    'MBIS_WB_GAS_ESP_DEFAULT':['naglmbis','/charge_models/mbis_wb_gas_charges_dipole_esp_default.py'],
 }
 
 def _charge_requester(
@@ -48,21 +48,25 @@ def _charge_requester(
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pdb') as tmp_file:
             tmp_file.write(conformer_mol)
             input = tmp_file.name  
+        protein_option = '--protein'
     else:
         print('ligand mode')
         input = conformer_mol
-        
-    script_path = os.path.join(
-        os.path.dirname(ChargeAPI.__file__),
-        model_locations[charge_model][1]
-    )
+        protein_option = '--not_protein'
+    # script_path = os.path.join(
+    #     os.path.dirname(ChargeAPI.__file__),
+    #     model_locations[charge_model][1]
+    # )
+    script_path = f'{os.path.dirname(ChargeAPI.__file__)}'+ model_locations[charge_model][1]
 
     # Build the command, passing the temporary file name as the argument.
     cmd = [
         "conda", "run", "--no-capture-output", "-n", model_locations[charge_model][0], "python", script_path,
-        "--conformer", input, batched  # Now passing the tmp file instead of '-'
+        "--conformer", input, batched, protein_option  # Now passing the tmp file instead of '-'
     ]
-            # Run the subprocess (note: we no longer use 'input=' since the script will read the file).
+    print(cmd)
+
+    # Run the subprocess (note: we no longer use 'input=' since the script will read the file).
     charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Optionally, delete the temporary file after use.
@@ -71,8 +75,6 @@ def _charge_requester(
             
     return prepare_json_outs(charge_result)
 
-    
-    
 
 def handle_charge_request(charge_model: CHARGE_MODELS, conformer_mol: str, batched: bool = False, protein = False) -> dict[str,any, None]:
     """

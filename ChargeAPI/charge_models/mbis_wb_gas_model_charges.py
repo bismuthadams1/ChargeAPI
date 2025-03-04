@@ -14,9 +14,11 @@ else:
     from naglmbis.models import load_charge_model
     from base_class  import ExternalChargeModel
     from openff.toolkit.topology import Molecule
+    from rdkit import Chem
     import rdkit
     import subprocess
     import argparse
+    import sys
 
     class MBIS_Model_charge(ExternalChargeModel):
 
@@ -65,9 +67,22 @@ if __name__ == "__main__":
     parser.add_argument('--conformer', type=str, help='Conformer mol')
     parser.add_argument('--batched', help='Batch charges or not', action='store_true')
     parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
+    parser.add_argument('--protein', help='Protein or not', dest='protein_option', action='store_true')
+    parser.add_argument('--not_protein', help='Protein or not', dest='protein_option', action='store_false')
     parser.set_defaults(batched = False)
 
     args = parser.parse_args()
+    molecule_input = args.conformer
+
+    if args.protein_option:
+        try:
+            mol = Chem.MolFromPDBFile(molecule_input, removeHs = False)
+            conformer_str = Chem.MolToMolBlock(mol)
+        except Exception as e:
+            print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)
+            print("PDB block received:", molecule_input, file=sys.stderr, flush=True)
+    else:
+         conformer_str = molecule_input
 
     mbis_model = MBIS_Model_charge()
     charges = mbis_model(conformer_mol = args.conformer, batched = args.batched) 

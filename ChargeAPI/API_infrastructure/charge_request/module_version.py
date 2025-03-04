@@ -53,10 +53,7 @@ def _charge_requester(
         print('ligand mode')
         input = conformer_mol
         protein_option = '--not_protein'
-    # script_path = os.path.join(
-    #     os.path.dirname(ChargeAPI.__file__),
-    #     model_locations[charge_model][1]
-    # )
+
     script_path = f'{os.path.dirname(ChargeAPI.__file__)}'+ model_locations[charge_model][1]
 
     # Build the command, passing the temporary file name as the argument.
@@ -64,7 +61,6 @@ def _charge_requester(
         "conda", "run", "--no-capture-output", "-n", model_locations[charge_model][0], "python", script_path,
         "--conformer", input, batched, protein_option  # Now passing the tmp file instead of '-'
     ]
-    print(cmd)
 
     # Run the subprocess (note: we no longer use 'input=' since the script will read the file).
     charge_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

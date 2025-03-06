@@ -350,7 +350,6 @@ def main():
                 conformer_mol=conformer_str,
                 batched=args.batched,
                 grid=grid_array,
-                protein=args.protein_option
             ) 
             # ESSENTIAL TO PRINT THE CHARGES TO STDOUT ~~~
             print(values, 'OO', esp_grid)
@@ -361,7 +360,6 @@ def main():
                 batched=args.batched,
                 broken_up=args.broken_up,
                 grid=grid_array,
-                protein=args.protein_option
             ) 
             # ESSENTIAL TO PRINT THE CHARGES TO STDOUT ~~~
             print(multipole, 'OO', dipole, 'OO', quadropole, 'OO', grid_out)
@@ -372,7 +370,6 @@ def main():
                 batched=args.batched,
                 batched_grid=args.batched_grid,
                 broken_up=args.broken_up,
-                protein=args.protein_option
             ) 
             print(file_path)
         else:
@@ -380,7 +377,6 @@ def main():
                 conformer_mol=conformer_str,
                 batched=args.batched,
                 broken_up=args.broken_up,
-                protein=args.protein_option
             ) 
             print(file_path)
 

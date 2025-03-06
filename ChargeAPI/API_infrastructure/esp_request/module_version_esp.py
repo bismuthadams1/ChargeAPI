@@ -51,7 +51,7 @@ def _esp_requester(
     except KeyError as e:
         raise Exception("ESP charge model does not exist") from e
 
-    script_path = os.path.join(os.path.dirname(ChargeAPI.__file__), model_path)
+    script_path = f'{os.path.dirname(ChargeAPI.__file__)}'+ model_path
 
     tmp_file_path = None
     if protein:

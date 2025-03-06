@@ -24,7 +24,14 @@ else:
     from openff.recharge.grids import LatticeGridSettings, MSKGridSettings
     from openff.toolkit import Molecule
     import logging
+    import io
+    import contextlib
+    from rdkit import RDLogger
+    # Set the RDKit logger to display debug messages
+    lg = RDLogger.logger()
+    lg.setLevel(RDLogger.DEBUG)
 
+    
     class RIN_model(ExternalESPModel):
         
         _name = "rinker"
@@ -324,7 +331,7 @@ def main():
             grid_list = args.grid_array.strip('[]').split()
             grid_array_flat = np.array([float(x) for x in grid_list])
             # Reshape to (-1, 3) and apply angstrom unit.
-            grid_array = grid_array_flat.reshape(-1, 3) * unit.angstrom
+            grid_array = grid_array_flat.reshape(-1, 3) 
         except Exception as e:
             print("Error processing grid array:", e, file=sys.stderr)
             sys.exit(1)
@@ -333,7 +340,23 @@ def main():
     conformer_str = args.conformer
     if args.protein_option:
         try:
-            mol = Chem.MolFromPDBFile(args.conformer, removeHs=False)
+            with open(args.conformer, 'r') as f:
+                pdb_content = f.read()
+        
+            err_buf = io.StringIO()
+            with contextlib.redirect_stderr(err_buf):
+                mol = Chem.MolFromPDBBlock(pdb_content, removeHs=False)
+            mol = Chem.MolFromPDBBlock(pdb_content, removeHs=False)
+            errors = err_buf.getvalue()
+            if mol is None:
+                print("RDKit failed to parse the PDB block. Captured errors:",  file=sys.stderr, flush=True)
+                print("PDB file content preview:", pdb_content[:500], file=sys.stderr, flush=True)
+                print(errors, file=sys.stderr, flush=True)
+                sys.exit(1)
+        
+            conformer_str = Chem.MolToMolBlock(mol)
+            if mol is None:
+                raise ValueError("Failed to parse the PDB block.")
             conformer_str = Chem.MolToMolBlock(mol)
         except Exception as e:
             print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)

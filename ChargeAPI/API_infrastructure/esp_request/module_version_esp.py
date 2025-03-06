@@ -6,6 +6,7 @@ import os
 import logging
 import tempfile
 import ChargeAPI
+from openff.units import unit
 
 # Define available ESP models and their conda environments/model paths.
 model_locations = {
@@ -17,7 +18,7 @@ def _esp_requester(
     batched: str,
     broken_up: str,
     conformer_mol: str,
-    grid: Optional[np.ndarray],
+    grid: Optional[unit.Quantity],
     batched_grid: str,
     protein: bool
 ) -> Dict[str, Any]:
@@ -76,7 +77,7 @@ def _esp_requester(
 
     if grid is not None:
         np.set_printoptions(threshold=np.inf)
-        grid_str = np.array2string(grid.flatten(), separator=' ', precision=8)
+        grid_str = np.array2string(grid.m.flatten(), separator=' ', precision=8)
         cmd.extend(["--grid_array", grid_str])
 
     cmd.append(batched_grid)
@@ -95,7 +96,7 @@ def handle_esp_request(
     conformer_mol: str,
     batched: bool = False,
     broken_up: bool = False,
-    grid: Optional[np.ndarray] = None,
+    grid: Optional[unit.Quantity] = None,
     batched_grid: bool = False,
     protein: bool = False
 ) -> Dict[str, Any]:

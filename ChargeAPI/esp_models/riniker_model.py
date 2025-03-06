@@ -14,6 +14,8 @@ else:
     #used for execution
     from base_class import ExternalESPModel #ChargeAPI
     from MultipoleNet import load_model, build_graph_batched, D_Q
+    from rdkit import Chem
+    import sys
     from openff.units import unit
     import argparse
     import rdkit
@@ -298,60 +300,89 @@ else:
 
             return esp.to(self.AU_ESP)
 
-if __name__ == "__main__":
-    # Define argparse setup for command line execution
+def main():
     parser = argparse.ArgumentParser(description='RIN charge model arguments')
-    parser.add_argument('--conformer', type=str, help='Conformer mol')
+    parser.add_argument('--conformer', type=str, help='Conformer mol or path to a PDB file', required=True)
     parser.add_argument('--batched', help='Batch charges or not', dest='batched', action='store_true')
-    parser.add_argument('--not_batched', help='Batch charges or not', dest='batched', action='store_false')
-    parser.add_argument('--broken_up', help='Provide multipoles broken up', dest='broken_up', action='store_true' )   
-    parser.add_argument('--not_broken_up', help='Provide multipoles broken up', dest='broken_up', action='store_false' )   
-    parser.add_argument('--grid_array', type=str, nargs='?', dest='grid_array', help='Provide the grid array as a flattened string')
+    parser.add_argument('--not_batched', help='Not batch charges', dest='batched', action='store_false')
+    parser.add_argument('--broken_up', help='Provide multipoles broken up', dest='broken_up', action='store_true')   
+    parser.add_argument('--not_broken_up', help='Do not provide multipoles broken up', dest='broken_up', action='store_false')   
+    parser.add_argument('--grid_array', type=str, nargs='?', dest='grid_array',
+                        help='Provide the grid array as a flattened string (e.g., "[1.0 2.0 3.0 ...]")')
     parser.add_argument('--batched_grid', help='Batch grid or not', dest='batched_grid', action='store_true')
-    parser.add_argument('--not_batched_grid', help='Batch grid or not', dest='batched_grid', action='store_false')
-    #how do I supply the grid argument as optional?
-    parser.set_defaults(batched = False)
-    parser.set_defaults(broken_up = False)
-    # Handle grid array
+    parser.add_argument('--not_batched_grid', help='Do not batch grid', dest='batched_grid', action='store_false')
+    parser.add_argument('--protein', help='Input is a protein PDB file', dest='protein_option', action='store_true')
+    parser.add_argument('--not_protein', help='Input is not a protein', dest='protein_option', action='store_false')
+    parser.set_defaults(batched=False, broken_up=False, protein_option=False)
 
     args = parser.parse_args()
-    rin_model = RIN_model()
+
+    # Process grid array if provided.
     grid_array = None
     if args.grid_array:
-        # grid_array_flat = np.fromstring(args.grid_array.strip('[]'), sep=' ')  # Parse flat grid array
-        grid_list = args.grid_array.strip('[]').split()  # Split the string into a list of elements
-        grid_array_flat = np.array([float(x) for x in grid_list])  # Convert the list to a NumPy array of floats
-        grid_array = grid_array_flat.reshape(-1, 3) * unit.angstrom  # Reshape to (-1, 3)    #Esp currently in hartree/energy and grid in angstrom. 
+        try:
+            grid_list = args.grid_array.strip('[]').split()
+            grid_array_flat = np.array([float(x) for x in grid_list])
+            # Reshape to (-1, 3) and apply angstrom unit.
+            grid_array = grid_array_flat.reshape(-1, 3) * unit.angstrom
+        except Exception as e:
+            print("Error processing grid array:", e, file=sys.stderr)
+            sys.exit(1)
+
+    # Process protein input: convert PDB to mol block if needed.
+    conformer_str = args.conformer
+    if args.protein_option:
+        try:
+            mol = Chem.MolFromPDBFile(args.conformer, removeHs=False)
+            conformer_str = Chem.MolToMolBlock(mol)
+        except Exception as e:
+            print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)
+            print("PDB block received:", args.conformer, file=sys.stderr, flush=True)
+            sys.exit(1)
+
+    rin_model = RIN_model()
+
+    # Call the RIN model based on the batched and broken_up settings.
     if not args.batched:
         if not args.broken_up:
+            # Returns values and a grid.
             values, esp_grid = rin_model(
-                conformer_mol = args.conformer,
-                batched = args.batched,
-                grid = grid_array
+                conformer_mol=conformer_str,
+                batched=args.batched,
+                grid=grid_array,
+                protein=args.protein_option
             ) 
+            # ESSENTIAL TO PRINT THE CHARGES TO STDOUT ~~~
             print(values, 'OO', esp_grid)
         else:
-            multipole, dipole, quadropole, grid = rin_model(
-                conformer_mol = args.conformer,
-                batched = args.batched,
-                broken_up= args.broken_up,
-                grid=grid_array
+            # Returns multipole, dipole, quadropole and grid.
+            multipole, dipole, quadropole, grid_out = rin_model(
+                conformer_mol=conformer_str,
+                batched=args.batched,
+                broken_up=args.broken_up,
+                grid=grid_array,
+                protein=args.protein_option
             ) 
-            print(multipole, 'OO', dipole, 'OO', quadropole, 'OO', grid)
+            # ESSENTIAL TO PRINT THE CHARGES TO STDOUT ~~~
+            print(multipole, 'OO', dipole, 'OO', quadropole, 'OO', grid_out)
     else:
         if args.batched_grid:
             file_path = rin_model(
-                conformer_mol = args.conformer,
-                batched = args.batched,
-                batched_grid = args.batched_grid,
-                broken_up= args.broken_up,
+                conformer_mol=conformer_str,
+                batched=args.batched,
+                batched_grid=args.batched_grid,
+                broken_up=args.broken_up,
+                protein=args.protein_option
             ) 
-            print(file_path)    
+            print(file_path)
         else:
             file_path = rin_model(
-                conformer_mol = args.conformer,
-                batched = args.batched,
-                broken_up=args.broken_up
+                conformer_mol=conformer_str,
+                batched=args.batched,
+                broken_up=args.broken_up,
+                protein=args.protein_option
             ) 
-            print(file_path)    
+            print(file_path)
 
+if __name__ == "__main__":
+    main()

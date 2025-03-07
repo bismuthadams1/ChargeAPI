@@ -184,8 +184,8 @@ def prepare_json_outs(
                 json_response = {
                     'monopole': monopole.strip(),
                     'dipole': dipole.strip(),
-                    'quadropole': quadropole.strip(),
-                    'grid': grid_out.strip(),
+                    'quadrupole': quadropole.strip(),
+                    # 'grid': grid_out.strip(),
                     'error': error
                 }
             except ValueError:

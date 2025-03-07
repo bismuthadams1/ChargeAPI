@@ -72,13 +72,13 @@ else:
                                         grid=grid)
             else:
                 charge_format = self.convert_to_charge_format(conformer_mol)
-                if grid is None:
-                    grid = self.build_grid(conformer_mol)
-                else:
-                    grid = grid * unit.angstrom
+                # if grid is None:
+                #     grid = self.build_grid(conformer_mol)
+                # else:
+                #     grid = grid * unit.angstrom
                 #if the charge model requires generation and reading of files to produce charges
-                monopole, dipole, quadropole = self.assign_multipoles(charge_format, grid)
-                return monopole, dipole, quadropole, grid
+                monopole, dipole, quadropole = self.assign_multipoles(charge_format)
+                return monopole, dipole, quadropole
                 
         
         def convert_to_charge_format(self, conformer_mol: str) -> tuple[np.ndarray,list[str]]:
@@ -149,7 +149,7 @@ else:
             #NOTE: ESP units, hartree/e and grid units are angstrom
             return (monopole_esp + dipole_esp + quadrupole_esp).m.flatten().tolist(), grid.m.tolist()
         
-        def assign_multipoles(self, coordinates_elements: tuple[np.ndarray,str], grid: unit.Quantity) -> tuple[list, list, list]:
+        def assign_multipoles(self, coordinates_elements: tuple[np.ndarray]) -> tuple[list, list, list]:
             """Assign charges according to charge model selected
 
             Parameters
@@ -378,14 +378,14 @@ def main():
             print(values, 'OO', esp_grid)
         else:
             # Returns multipole, dipole, quadropole and grid.
-            multipole, dipole, quadropole, grid_out = rin_model(
+            multipole, dipole, quadropole = rin_model(
                 conformer_mol=conformer_str,
                 batched=args.batched,
                 broken_up=args.broken_up,
                 grid=grid_array,
             ) 
             # ESSENTIAL TO PRINT THE CHARGES TO STDOUT ~~~
-            print(multipole, 'OO', dipole, 'OO', quadropole, 'OO', grid_out)
+            print(multipole, 'OO', dipole, 'OO', quadropole, 'OO')
     else:
         if args.batched_grid:
             file_path = rin_model(

@@ -55,7 +55,6 @@ def _charge_requester(
         protein_option = '--not_protein'
 
     script_path = f'{os.path.dirname(ChargeAPI.__file__)}'+ model_locations[charge_model][1]
-
     # Build the command, passing the temporary file name as the argument.
     cmd = [
         "conda", "run", "--no-capture-output", "-n", model_locations[charge_model][0], "python", script_path,

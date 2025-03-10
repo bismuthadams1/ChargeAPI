@@ -52,6 +52,7 @@ else:
         def convert_to_charge_format(self, conformer_mol: str):
 
             rdkit_conformer = rdkit.Chem.rdmolfiles.MolFromMolBlock(conformer_mol, removeHs = False)
+            print('rdkit confomrmer in MBIS:', rdkit_conformer, file=sys.stderr)
             return rdkit_conformer
         
         def assign_charges(self, rdkit_conformer: Molecule):
@@ -76,16 +77,23 @@ if __name__ == "__main__":
 
     if args.protein_option:
         try:
+            # with open(molecule_input, 'r') as file:
+            #      pdbfile = file.read()
             mol = Chem.MolFromPDBFile(molecule_input, removeHs = False)
+            if mol is None:
+                print('mol to molblock fails', file = sys.stderr, flush=True)
+                raise ValueError("Failed to parse the PDB block into a valid RDKit molecule.")
+                
+            # molecule = Chem.MolFromPDBBlock(pdbfile, removeHs = False)
             conformer_str = Chem.MolToMolBlock(mol)
         except Exception as e:
             print("Conversion from PDB to mol block failed:", e, file=sys.stderr, flush=True)
             print("PDB block received:", molecule_input, file=sys.stderr, flush=True)
     else:
-         conformer_str = molecule_input
+        conformer_str = molecule_input
 
     mbis_model = MBIS_Model_charge()
-    charges = mbis_model(conformer_mol = args.conformer, batched = args.batched) 
+    charges = mbis_model(conformer_mol = conformer_str, batched = args.batched) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~

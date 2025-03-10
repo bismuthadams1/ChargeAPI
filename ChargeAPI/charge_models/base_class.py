@@ -74,6 +74,7 @@ class ExternalChargeModel:
                 charges = self.read_charge_output(charge_file_path)
             #other charge model types will produce charges based on python objects in internal memory
             else:
+                print(charge_format, file= sys.stderr, flush = True)
                 charges = self.assign_charges(charge_format)
             return charges
 

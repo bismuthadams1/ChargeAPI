@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     eem_model = EEM_model()
-    charges = eem_model(conformer_mol = args.conformer, batched = args.batched) 
+    charges = eem_model(conformer_mol = conformer_str, batched = args.batched) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~

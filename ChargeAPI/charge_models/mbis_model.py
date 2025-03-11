@@ -83,7 +83,7 @@ if __name__ == "__main__":
          conformer_str = molecule_input
 
     mbis_model = MBIS_Model()
-    charges = mbis_model(conformer_mol = args.conformer, batched = args.batched) 
+    charges = mbis_model(conformer_mol = conformer_str, batched = args.batched) 
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~
     print(charges)
     #ESSENTIAL TO PRINT THE CHARGES TO STDOUT~~~~

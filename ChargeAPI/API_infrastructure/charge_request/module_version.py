@@ -3,7 +3,7 @@ import tempfile
 from multiprocessing import Process
 import json
 import numpy as np
-from typing import LiteralString, Literal
+from typing import Literal
 import os
 import logging
 import ChargeAPI
